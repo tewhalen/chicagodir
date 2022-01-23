@@ -1,6 +1,6 @@
 # ================================== BUILDER ===================================
-ARG INSTALL_PYTHON_VERSION=${INSTALL_PYTHON_VERSION:-PYTHON_VERSION_NOT_SET}
-ARG INSTALL_NODE_VERSION=${INSTALL_NODE_VERSION:-NODE_VERSION_NOT_SET}
+ARG INSTALL_PYTHON_VERSION=3.9
+ARG INSTALL_NODE_VERSION=14
 
 FROM node:${INSTALL_NODE_VERSION}-buster-slim AS node
 FROM python:${INSTALL_PYTHON_VERSION}-slim-buster AS builder
@@ -11,6 +11,8 @@ COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/lib/ /usr/lib/
 # See https://github.com/moby/moby/issues/37965
 RUN true
+RUN apt-get update && apt-get install  -y gcc g++ git
+
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY ["Pipfile", "shell_scripts/auto_pipenv.sh", "./"]
 RUN pip install --no-cache pipenv
@@ -29,6 +31,7 @@ RUN npm run-script build
 FROM python:${INSTALL_PYTHON_VERSION}-slim-buster as production
 
 WORKDIR /app
+RUN apt-get update && apt-get install  -y gcc g++ git
 
 RUN useradd -m sid
 RUN chown -R sid:sid /app
