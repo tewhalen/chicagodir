@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+    <div class="container">
+
+        <h1 class="display-3">{{page.directory.name}} ({{page.directory.year}}), p{{page.number}}</h1>
+
+    </div>
+</div><!-- /.jumbotron -->
+
+<div class="container">
+    <table>
+        <thead>
+            <tr>
+                <th>Last Name</th>
+                <th>First Name</th>
+                <th>Middle Name</th>
+                <th>Profession</th>
+
+            </tr>
+        </thead>
+        {% for entry in page.entries %}
+        <tr>
+            <td>{{entry.last_name}}</td>
+            <td>{{entry.first_name}}</td>
+            <td>{{entry.middle_name}}</td>
+            <td> {{entry.profession}}</td>
+            <td>{{entry.home_address.render()}}
+            <td>{% if entry.home_address.street %}
+                <a
+                    href="
+                {{url_for('street.view_street', tag=entry.home_address.street.street_id)}}">{{entry.home_address.street.full_name}}</a>
+                {% else %}
+                [no street]
+                {% endif %}
+            </td>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="container-fluid">
+    <form method="post">
+        {{ street_form.csrf_token }}
+        <h2>Editing {{street.full_name}}</h2>
+        <div class="row">
+            <div class="col">
+                <h3>Street Info</h3>
+                <table>
+                    <tr>
+                        <td><label for="direction">Direction</label>
+                            <p class="small" style="width: 23em;">Modern Chicago streets are all prefaced with a
+                                directional
+                                indicator (N/S/E/W).
+                                Historically, some streets also began with a direction, usually indicating where in the
+                                city
+                                they
+                                were. For example, Clark St. north of the
+                                river was known as "North Clark Street" and south of the river as merely "Clark Street".
+                                However,
+                                note that some other streets have what looks like a directional indicator as part of
+                                their Name.
+                                Notable examples are
+                                "West Water Street" and "North Branch Street", and "East Circle Avenue".</p>
+                        </td>
+
+                        <td class="align-top">{{ street_form.direction(class_="form-control") }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="name">Name</label></td>
+                        <td>{{ street_form.name(class_="form-control") }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="suffix">Suffix</label>
+                            <p class="small" style="width: 23em;">Most Chicago streets have had some sort of suffix
+                                indicating
+                                what kind of
+                                street it is (and in some cases, what direction it runs) although this hasn't been used
+                                consistently. In this
+                                database, we use abbreviations instead of spelling out the type of street. Most common
+                                are: AVE
+                                (Avenue), ST (Street),
+                                DR (Drive), CT (Court), LN (Lane), PL (Place), BLVD (Boulevard), TER (Terrace), and Road
+                                (RD).
+                                Please use these
+                                abbreviations when entering in a new street. If the reference from which you're entering
+                                the
+                                street doesn't the suffix, leave it blank for now.
+                                Not
+                                every street has this - most notably
+                                "Broadway".</p>
+                        </td>
+                        <td class="align-top">{{ street_form.suffix(class_="form-control") }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="suffix_direction">Suffix Direction</label>
+                            <p class="small" style="width: 23em;">A few Chicago streets have suffix directions, usually
+                                this
+                                indicates
+                                that there's a frontage road with a slightly different designation, so "N Kedzie
+                                Boulevard E"
+                                and "N Kedzie Boulevard W" just
+                                South of Logan Square. This is exceedingly rare. </p>
+                        </td>
+                        <td class="align-top">{{street_form.suffix_direction(class_="form-control")}}
+                        </td>
+                    </tr>
+
+
+                    <tr>
+                        <td><label for="grid_location">Grid Location</label>
+
+                        </td>
+                        <td class="align-top">{{street_form.grid_location}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="grid_direction">Grid Position (N/S/E/W)</label>
+                            <p class="small" style="width: 23em;">Since 1909, Chicago has been on a fairly consistent
+                                grid
+                                system, and
+                                this positional indicator indicates where on the modern day grid system this street is
+                                (or would
+                                be, if the street
+                                no longer exists). </p>
+                        </td>
+                        <td class="align-top">
+
+                            {{street_form.grid_direction}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="min_address">Min Address</label>
+
+                        </td>
+                        <td class="align-top">{{street_form.min_address(class_="form-control")}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="max_address">Max Address</label>
+                            <p class="small" style="width: 23em;">The Min and Max address fields indicate what
+                                <b>modern</b>
+                                addresses would be found
+                                on the street. This is an aid to finding the current location of the street on a map (or
+                                along
+                                its modern sucessor street). So, even a street
+                                which was vacated or replaced before renumbering should use modern grid numbers in these
+                                fields.
+                            </p>
+                        </td>
+                        <td class="align-top">{{street_form.max_address(class_="form-control")}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col">
+                <h3>Status</h3>
+                <table>
+                    <tr>
+                        <td>
+                            <label for="current">Current?</label>
+
+                        </td>
+                        <td>
+                            {{street_form.current(checked=street.current)}}
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="start_date">Earliest Date</label></td>
+
+                        <td>
+                            {{street_form.start_date(class_="form-control")}}
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="end_date">Latest Date</label>
+                            <p class="small" style="width: 23em;">When the street began to exist and stopped existing.
+                                These
+                                fields are intended to be used as a finding aid,
+                                so even an inaccurate date is preferable to nothing.
+                            </p>
+                        </td>
+                        <td class="align-top">
+                            {{street_form.end_date(class_="form-control")}}
+
+                        </td>
+                    </tr>
+                </table>
+
+
+
+                <h3>Historical Note</h3>
+                {{street_form.historical_note(class_="form-control")}}
+                <h3>Successor Streets</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Street</th>
+                            <th>Type</th>
+                            <th>Change</th>
+                            <th>Date</th>
+                            <th>Note</th>
+                            <th>Remove?</th>
+
+                        </tr>
+                    </thead>
+
+                    {% for nested in street_form.successors %}
+                    <tr>
+                        <td>{{nested.to_id}}</td>
+                        <td>{{nested.type}}</td>
+                        <td>{{nested.date}}</td>
+                        <td>{{nested.note}}</td>
+                        <td>{{nested.remove}}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h3>Database Flags</h3>
+                <table>
+                    <tr>
+                        <td>
+                            <label for="confirmed">Confirmed?</label>
+                            <p class="small" style="width: 23em;">Mark a street as "confirmed" when it doesn't look like
+                                anything is wrong with it. Uncheck it if something seems fishy.
+                            </p>
+                        </td>
+                        <td>
+                            {{street_form.confirmed(checked=street.confirmed)}}
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="weird">Weird?</label>
+                            <p class="small" style="width: 23em;">Mark a street as "weird" when something important
+                                about the street can't be entered into the database.
+                            </p>
+                        </td>
+                        <td>
+                            {{street_form.weird(checked=street.weird)}}
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="skip">Skip?</label>
+                            <p class="small" style="width: 23em;">Mark a street as "skip" when it shouldn't show up in
+                                normal listings.
+                            </p>
+                        </td>
+                        <td>
+                            {{street_form.skip}}
+
+                        </td>
+                    </tr>
+                </table>
+
+                {% if street_form.errors %}
+                <ul class="errors">
+                    {% for error, value in street_form.errors.items() %}
+                    <li>{{ error }} {{value}}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <input type="submit">
+            </div>
+
+        </div>
+    </form>
+</div>
+
+
+
+{% endblock %}

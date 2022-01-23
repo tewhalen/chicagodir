@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+  <div class="container">
+
+    <h1 class="display-3">Welcome to chicago city directories</h1>
+
+  </div>
+</div><!-- /.jumbotron -->
+
+<div class="container">
+  {% for directory in directories %}
+  <div><a href="/dir/{{directory.tag}}/">{{directory.name}}</a> {{directory.year}}</div>
+  {% endfor %}
+
+  <a href="/dir/new">new directory</a>
+
+</div>
+{% endblock %}

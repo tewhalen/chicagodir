@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+    <div class="container">
+
+        <h1 class="display-3">Welcome to chicago city directories</h1>
+
+    </div>
+</div><!-- /.jumbotron -->
+
+<div class="container">
+    <h2>{{directory.name}} - {{directory.year}}</h2>
+
+    <h3>Pages</h3>
+    {% for page in directory.pages %}
+    <div><a href="/dir/{{directory.tag}}/p/{{page.number}}">{{page.number}}</a></div>
+    {% endfor %}
+
+    <div>
+        <h3> upload a new page</h3>
+        <form class="form-inline" id="loginForm" method="POST" enctype="multipart/form-data"
+            action="{{ url_for('dir.upload_csv', tag=directory.tag) }}" role="login">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type=file name=file>
+            <input type=submit value=Upload>
+        </form>
+    </div>
+</div>
+{% endblock %}

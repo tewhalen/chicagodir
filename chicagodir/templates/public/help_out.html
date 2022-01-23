@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">Help Out!</h1>
+    <div class="row">
+        <p class="lead">
+            We've got a lot of data that could use some work! Pitch in!
+        </p>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <i class=" fas fa-birthday-cake" style="font-size: 64px"></i>
+
+
+                <h5 class="card-title">{{missing_start_dates}} streets that don't have a birthday</h5>
+            </div>
+        </div>
+
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <i class=" fas fa-book-dead" style="font-size: 64px"></i>
+                <h5 class="card-title">{{missing_end_dates}} retired streets that we're not sure when they stopped
+                    existing</h5>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <i class=" fas fa-search-location" style="font-size: 64px"></i>
+                <h5 class="card-title">{{missing_grid_location}} current streets we're not sure where they are in the
+                    city</h5>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <i class=" fas fa-user-check" style="font-size: 64px"></i>
+                <h5 class="card-title">Streets that haven't been checked by a person yet</h5>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <i class=" fas fa-user-secret" style="font-size: 64px"></i>
+                <h5 class="card-title">Professions from directories that look suspicious</h5>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+{% endblock %}

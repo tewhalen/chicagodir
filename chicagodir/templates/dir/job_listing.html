@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+    <div class="container">
+
+        <h1 class="display-3">known professions</h1>
+
+    </div>
+</div><!-- /.jumbotron -->
+
+<div class="container">
+    {% for job in jobs %}
+    <div>{{job}} {{count}}</div>
+    {% endfor %}
+
+
+</div>
+{% endblock %}

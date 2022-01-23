@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+    <div class="container">
+
+        <h1 class="display-3">Current streets as of today</h1>
+
+    </div>
+</div><!-- /.jumbotron -->
+
+<script>
+    if (typeof ($.fn.popover) != 'undefined') {
+        alert("uh oh");
+    }
+</script>
+<div class="container">
+
+    <div class="accordion" id="accordionExample">
+        <div class="card">
+            {% for street_group in current_streets %}
+
+            <div class="card-header" id="heading{{loop.index}}">
+                <h4 class="mb-0">
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse{{loop.index}}" aria-expanded="false"
+                        aria-controls="collapse{{loop.index}}">
+                        {{street_group[0].name}} - {{street_group[-1].name}}
+                    </button>
+                </h4>
+            </div>
+            <div id="collapse{{loop.index}}" class="collapse" aria-labelledby="heading{{loop.index}}"
+                data-bs-parent="#accordionExample">
+                <div class="card-body row">
+                    <div class="col-sm">
+                        <ul>
+                            {% for street in street_group[:25] %}
+                            <li><a
+                                    href="{{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-sm">
+                        <ul>
+                            {% for street in street_group[25:50] %}
+                            <li><a
+                                    href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="col-sm">
+                        <ul>
+                            {% for street in street_group[50:75] %}
+                            <li><a
+                                    href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-sm">
+                        <ul>
+                            {% for street in street_group[75:] %}
+                            <li><a
+                                    href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
