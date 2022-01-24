@@ -39,6 +39,7 @@ USER sid
 ENV PATH="/home/sid/.local/bin:${PATH}"
 
 COPY --from=builder --chown=sid:sid /app/chicagodir/static /app/chicagodir/static
+
 COPY ["Pipfile", "shell_scripts/auto_pipenv.sh", "./"]
 RUN pip install --no-cache pipenv
 RUN pipenv install
