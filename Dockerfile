@@ -31,7 +31,6 @@ RUN npm run-script build
 FROM python:${INSTALL_PYTHON_VERSION}-slim-buster as production
 
 WORKDIR /app
-RUN apt-get update && apt-get install  -y gcc g++ git
 
 RUN useradd -m sid
 RUN chown -R sid:sid /app
