@@ -11,7 +11,7 @@ COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/lib/ /usr/lib/
 # See https://github.com/moby/moby/issues/37965
 RUN true
-RUN apt-get update && apt-get install  -y gcc g++ git
+#RUN apt-get update && apt-get install  -y gcc g++ git
 
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY ["Pipfile", "Pipfile.lock", "shell_scripts/auto_pipenv.sh", "./"]

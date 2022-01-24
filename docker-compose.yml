@@ -9,8 +9,8 @@ x-default-volumes:
   &default_volumes
   volumes:
     - ./:/app
-    - node-modules:/app/node_modules
-    - ./dev.db:/tmp/dev.db
+#    - node-modules:/app/node_modules
+#    - ./dev.db:/tmp/dev.db
 
 services:
   flask-dev:
@@ -43,6 +43,8 @@ services:
       FLASK_DEBUG: 0
       LOG_LEVEL: info
       GUNICORN_WORKERS: 4
+      DATABASE_URL: postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
+
     <<: *default_volumes
 
   manage:
