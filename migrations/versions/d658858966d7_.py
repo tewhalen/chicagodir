@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 521d4d6c0f59
+Revision ID: d658858966d7
 Revises: 
-Create Date: 2022-01-24 04:09:10.450246
+Create Date: 2022-01-24 17:03:39.508705
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '521d4d6c0f59'
+revision = 'd658858966d7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -34,19 +34,19 @@ def upgrade():
     sa.Column('end_date', sa.Date(), nullable=True),
     sa.Column('grid_location', sa.Integer(), nullable=True),
     sa.Column('grid_direction', sa.String(length=2), nullable=True),
-    sa.Column('diagonal', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('diagonal', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.Column('direction', sa.String(length=3), nullable=True),
     sa.Column('name', sa.String(length=80), nullable=False),
     sa.Column('suffix', sa.String(length=15), nullable=True),
     sa.Column('suffix_direction', sa.String(length=3), nullable=True),
     sa.Column('min_address', sa.Integer(), nullable=True),
     sa.Column('max_address', sa.Integer(), nullable=True),
-    sa.Column('current', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('current', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.Column('historical_note', sa.Text(), nullable=True),
     sa.Column('text', sa.Text(), nullable=True),
-    sa.Column('confirmed', sa.Boolean(), server_default=sa.text('0'), nullable=False),
-    sa.Column('weird', sa.Boolean(), server_default=sa.text('0'), nullable=False),
-    sa.Column('skip', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('confirmed', sa.Boolean(), server_default=sa.text('false'), nullable=False),
+    sa.Column('weird', sa.Boolean(), server_default=sa.text('false'), nullable=False),
+    sa.Column('skip', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_streets_current'), 'streets', ['current'], unique=False)

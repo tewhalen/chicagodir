@@ -56,6 +56,7 @@ CMD ["-c", "/etc/supervisor/supervisord.conf"]
 
 # ================================= DEVELOPMENT ================================
 FROM builder AS development
+COPY --from=builder --chown=sid:sid  /app/.venv /app/.venv
 RUN pipenv install --dev
 EXPOSE 2992
 EXPOSE 5000

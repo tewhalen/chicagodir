@@ -1,10 +1,12 @@
 version: "3.6"
 
-x-build-args: &build_args
+x-build-args:
+  &build_args
   INSTALL_PYTHON_VERSION: "3.9"
   INSTALL_NODE_VERSION: "14"
 
-x-default-volumes: &default_volumes
+x-default-volumes:
+  &default_volumes
   volumes:
     - ./:/app
     - node-modules:/app/node_modules
@@ -21,6 +23,10 @@ services:
     ports:
       - "8080:5000"
       - "2992:2992"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
     <<: *default_volumes
 
   flask-prod:
@@ -46,13 +52,25 @@ services:
       args:
         <<: *build_args
     entrypoint: pipenv run flask
+    depends_on:
+      - db
     environment:
-      FLASK_ENV: production
-      FLASK_DEBUG: 0
+      - DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
     image: "chicagodir-manage"
     stdin_open: true
     tty: true
     <<: *default_volumes
 
+  db:
+    image: postgres:14.1-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=hello_flask
+      - POSTGRES_PASSWORD=hello_flask
+      - POSTGRES_DB=chicagodir_dev
 volumes:
   node-modules:
+  postgres_data:
