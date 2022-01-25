@@ -1,8 +1,8 @@
 # ================================== BUILDER ===================================
 ARG INSTALL_PYTHON_VERSION=3.9
-ARG INSTALL_NODE_VERSION=14
+ARG INSTALL_NODE_VERSION=16
 
-FROM node:${INSTALL_NODE_VERSION}-buster-slim AS node
+FROM node:16-buster-slim AS node
 FROM python:${INSTALL_PYTHON_VERSION}-slim-buster AS builder
 
 WORKDIR /app
@@ -56,7 +56,7 @@ CMD ["-c", "/etc/supervisor/supervisord.conf"]
 
 # ================================= DEVELOPMENT ================================
 FROM builder AS development
-COPY --from=builder --chown=sid:sid  /app/.venv /app/.venv
+RUN rm -rf .venv
 RUN pipenv install --dev
 EXPOSE 2992
 EXPOSE 5000
