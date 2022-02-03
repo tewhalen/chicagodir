@@ -44,6 +44,9 @@ Flask-DebugToolbar = "==0.11.0"
 # Environment variable parsing
 environs = "==9.3.5"
 
+# markdown
+markdown = "*"
+
 [dev-packages]
 # Testing
 pytest = "==6.2.5"

@@ -78,11 +78,17 @@ class Street(PkModel):
 
     street_id = Column(db.String(25))
     # the full name of the street
-    name = Column(db.String(80), nullable=True)
+    # name = Column(db.String(80), nullable=True)
 
     # best guesses okay
     start_date = Column(db.Date(), nullable=True, index=True)
+    start_date_circa = Column(
+        db.Boolean(), nullable=False, server_default=expression.false()
+    )
     end_date = Column(db.Date(), nullable=True, index=True)
+    end_date_circa = Column(
+        db.Boolean(), nullable=False, server_default=expression.false()
+    )
 
     # where on the grid (e.g. Foster is 5200 N)
     grid_location = Column(db.Integer(), nullable=True)
@@ -107,6 +113,8 @@ class Street(PkModel):
     current = Column(
         db.Boolean(), nullable=False, server_default=expression.false(), index=True
     )
+
+    vacated = Column(db.Boolean(), nullable=False, server_default=expression.false())
 
     # notes on the history
     historical_note = Column(db.Text())
@@ -157,7 +165,11 @@ class Street(PkModel):
             year = ""
             if self.end_date:
                 year = self.end_date.year
-                return "retired {}".format(year)
+                if self.end_date_circa:
+                    c = "c. "
+                else:
+                    c = ""
+                return "retired {}{}".format(c, year)
             else:
                 return "retired"
         else:
@@ -208,6 +220,11 @@ class Street(PkModel):
                 return matched_streets[0]
         print("too many:", matched_streets)
 
+    def record_edit(self, user, change: str):
+        change_object = StreetEdit(street=self, user=user, note=change)
+
+        change_object.save()
+
 
 class StreetChange(PkModel):
     """a renaming or other change to a street"""
@@ -228,7 +245,7 @@ class StreetChange(PkModel):
 
 
 class StreetEdit(PkModel):
-    """tracking user or system changes to a street"""
+    """tracking user or system changes to a street in this database"""
 
     __tablename__ = "streets_edits"
 
@@ -241,7 +258,31 @@ class StreetEdit(PkModel):
     user = relationship("User", foreign_keys=[user_id])
 
     # time of edit
-    timestamp = Column(db.DateTime(timezone=True), default=db.func.now())
+    timestamp = Column(db.DateTime(timezone=True), server_default=db.func.now())
 
     # note of edit
     note = Column(db.Text())
+
+
+class StreetList(PkModel):
+    """A reference work that has a list of streets extant in a year"""
+
+    __tablename__ = "street_lists"
+
+    name = Column(db.String(80), nullable=False)
+    date = Column(db.Date(), nullable=False, index=True)
+
+    url = Column(db.Text())
+
+    # other notes
+    text = Column(db.Text())
+
+
+class StreetListEntry(PkModel):
+    __tablename__ = "street_list_entries"
+
+    list_id = reference_col("street_lists")
+    list = relationship("StreetList", backref="entries", foreign_keys=[list_id])
+
+    street_id = reference_col("streets", nullable=True)
+    street = relationship("Street", foreign_keys=[street_id])

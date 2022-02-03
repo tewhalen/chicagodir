@@ -87,8 +87,9 @@ def help_out():
     missing_end_dates = Street.query.filter_by(end_date=None, current=False).count()
     missing_start_dates = Street.query.filter_by(start_date=None).count()
     missing_grid_location = Street.query.filter_by(
-        grid_location="", current=True
+        grid_location=None, current=True
     ).count()
+    unchecked_streets = Street.query.filter_by(confirmed=False).count()
 
     return render_template(
         "public/help_out.html",
@@ -96,4 +97,5 @@ def help_out():
         missing_end_dates=missing_end_dates,
         missing_start_dates=missing_start_dates,
         missing_grid_location=missing_grid_location,
+        unchecked_streets=unchecked_streets,
     )

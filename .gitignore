@@ -56,3 +56,4 @@ env/
 
 # Development database
 *.db
+.DS_Store

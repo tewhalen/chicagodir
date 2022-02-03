@@ -1,13 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
 <!-- Main jumbotron for a primary marketing message or call to action -->
-<div class="jumbotron">
-  <div class="container">
 
-    <h1 class="display-3">Current streets as of today</h1>
 
-  </div>
-</div><!-- /.jumbotron -->
+
+
 
 <script>
   if (typeof ($.fn.popover) != 'undefined') {
@@ -15,6 +12,35 @@
   }
 </script>
 <div class="container">
+
+  <header class="py-3 mb-4 border-bottom">
+    <div class="container d-flex flex-wrap justify-content-center">
+      <a href="/" class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto text-dark text-decoration-none">
+        <i class="fas fa-road"></i>
+        <span class="fs-4">Chicago streets as of {{year_str}}</span>
+      </a>
+      <form method="get" class="col-12 col-lg-auto mb-3 mb-lg-0 ">
+        <div class="row g-2">
+
+          <div class="col-md">
+            <div class="form-floating">
+              {{search_form.name(class="form-control", placeholder="xxxx")}} {{search_form.name.label}}
+            </div>
+          </div>
+
+          <div class="col-md">
+            <div class="form-floating">
+              {{search_form.year(class="form-control", style="width:5em;")}}{{search_form.year.label}}
+
+            </div>
+          </div>
+          <div class="col-md">
+            <input type="submit">
+          </div>
+        </div>
+      </form>
+    </div>
+  </header>
 
   <div class="accordion" id="accordionExample">
     <div class="card">
@@ -28,8 +54,8 @@
           </button>
         </h4>
       </div>
-      <div id="collapse{{loop.index}}" class="collapse" aria-labelledby="heading{{loop.index}}"
-        data-bs-parent="#accordionExample">
+      <div id="collapse{{loop.index}}" class="collapse {%if loop.index == 1 %}show{% endif %}"
+        aria-labelledby="heading{{loop.index}}" data-bs-parent="#accordionExample">
         <div class="card-body row">
           <div class="col-sm">
             <ul>

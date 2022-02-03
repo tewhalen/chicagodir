@@ -1,4 +1,18 @@
 {% extends "layout.html" %}
+{% macro validated_field(field) -%}
+{% if field.errors %}
+
+{{ field(class_="form-control is-invalid") }}
+{% for error in field.errors %}
+<div class="invalid-feedback">
+    {{error}}
+</div>
+{% endfor %}
+{% else %}
+{{ field(class_="form-control") }}
+{% endif %}
+
+{%- endmacro %}
 {% block content %}
 <!-- Main jumbotron for a primary marketing message or call to action -->
 <div class="container-fluid">
@@ -26,12 +40,28 @@
                                 "West Water Street" and "North Branch Street", and "East Circle Avenue".</p>
                         </td>
 
-                        <td class="align-top">{{ street_form.direction(class_="form-control") }}
+                        <td class="align-top">
+                            {% if street_form.direction.errors %}
+                            {{ street_form.direction(class_="form-control is-invalid") }}
+                            {% else %}
+                            {{ street_form.direction(class_="form-control") }}
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
                         <td><label for="name">Name</label></td>
-                        <td>{{ street_form.name(class_="form-control") }}
+                        <td>
+                            {% if street_form.name.errors %}
+
+                            {{ street_form.name(class_="form-control is-invalid") }}
+                            {% for error in street_form.name.errors %}
+                            <div class="invalid-feedback">
+                                {{error}}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            {{ street_form.name(class_="form-control") }}
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
@@ -95,10 +125,20 @@
                         </td>
                     </tr>
                     <tr>
+                        <td> {{street_form.diagonal.label(class_="form-check-label")}}</td>
+                        <td class="align-top">
+                            <div class="form-check">
+
+                                {{street_form.diagonal(class_="form-check-input")}}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
                         <td><label for="min_address">Min Address</label>
 
                         </td>
-                        <td class="align-top">{{street_form.min_address(class_="form-control")}}
+                        <td class="align-top">
+                            {{validated_field(street_form.min_address)}}
                         </td>
                     </tr>
                     <tr>
@@ -127,7 +167,19 @@
 
                         </td>
                         <td>
-                            {{street_form.current(checked=street.current)}}
+                            {{street_form.current()}}
+
+                        </td>
+                    </tr>
+                    <tr>
+
+                        <td>
+                            <div class="form-check">
+                                {{street_form.vacated.label(class_="form-check-label")}}
+                                {{street_form.vacated(class="form-check-input")}}
+
+
+                            </div>
 
                         </td>
                     </tr>
@@ -138,6 +190,13 @@
                             {{street_form.start_date(class_="form-control")}}
 
                         </td>
+                        <td>
+                            <div class="form-check">
+                                {{street_form.start_date_circa.label(class_="form-check-label")}}
+                                {{street_form.start_date_circa(class_="form-check-input")}}
+                            </div>
+                        </td>
+
                     </tr>
                     <tr>
                         <td><label for="end_date">Latest Date</label>
@@ -151,6 +210,13 @@
                             {{street_form.end_date(class_="form-control")}}
 
                         </td>
+                        <td class="align-top">
+                            <div class="form-check">
+                                {{street_form.end_date_circa.label(class_="form-check-label")}}
+                                {{street_form.end_date_circa(class_="form-check-input")}}
+                            </div>
+                        </td>
+
                     </tr>
                 </table>
 
@@ -158,29 +224,42 @@
 
                 <h3>Historical Note</h3>
                 {{street_form.historical_note(class_="form-control")}}
+
+                <h3>Source Notes</h3>
+                {{street_form.text(class_="form-control")}}
                 <h3>Successor Streets</h3>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
                             <th>Street</th>
-                            <th>Type</th>
-                            <th>Change</th>
-                            <th>Date</th>
-                            <th>Note</th>
+
+                            <th>Date of Change</th>
+                            <th>Source</th>
+
                             <th>Remove?</th>
 
                         </tr>
                     </thead>
+                    <tbody>
+                        {% for nested in street_form.successors %}
+                        <tr>
+                            <td>{{nested.to_id}}</td>
+                            <td>{{nested.date}}</td>
+                            <td>{{nested.note}}</td>
+                            <td>{{nested.remove}}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <th>add a sucessor street</th>
+                            </tg>
+                        </tr>
 
-                    {% for nested in street_form.successors %}
-                    <tr>
-                        <td>{{nested.to_id}}</td>
-                        <td>{{nested.type}}</td>
-                        <td>{{nested.date}}</td>
-                        <td>{{nested.note}}</td>
-                        <td>{{nested.remove}}</td>
-                    </tr>
-                    {% endfor %}
+                        <tr>
+                            <td>{{street_form.new_successor_street}}</td>
+                            <td>{{street_form.new_successor_street_date}}</td>
+                            <td>{{street_form.new_successor_street_note}}</td>
+                        </tr>
+                    </tbody>
                 </table>
 
                 <h3>Database Flags</h3>
@@ -193,7 +272,7 @@
                             </p>
                         </td>
                         <td>
-                            {{street_form.confirmed(checked=street.confirmed)}}
+                            {{street_form.confirmed}}
 
                         </td>
                     </tr>
