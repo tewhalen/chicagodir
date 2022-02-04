@@ -15,7 +15,7 @@
 {%- endmacro %}
 {% block content %}
 <!-- Main jumbotron for a primary marketing message or call to action -->
-<div class="container-fluid">
+<div class="container">
     <form method="post">
         {{ street_form.csrf_token }}
         <h2>Editing {{street.full_name}}</h2>
@@ -219,49 +219,6 @@
 
                     </tr>
                 </table>
-
-
-
-                <h3>Historical Note</h3>
-                {{street_form.historical_note(class_="form-control")}}
-
-                <h3>Source Notes</h3>
-                {{street_form.text(class_="form-control")}}
-                <h3>Successor Streets</h3>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Street</th>
-
-                            <th>Date of Change</th>
-                            <th>Source</th>
-
-                            <th>Remove?</th>
-
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for nested in street_form.successors %}
-                        <tr>
-                            <td>{{nested.to_id}}</td>
-                            <td>{{nested.date}}</td>
-                            <td>{{nested.note}}</td>
-                            <td>{{nested.remove}}</td>
-                        </tr>
-                        {% endfor %}
-                        <tr>
-                            <th>add a sucessor street</th>
-                            </tg>
-                        </tr>
-
-                        <tr>
-                            <td>{{street_form.new_successor_street}}</td>
-                            <td>{{street_form.new_successor_street_date}}</td>
-                            <td>{{street_form.new_successor_street_note}}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
                 <h3>Database Flags</h3>
                 <table>
                     <tr>
@@ -301,19 +258,68 @@
                         </td>
                     </tr>
                 </table>
+                <h3>Successor Streets</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Street</th>
 
-                {% if street_form.errors %}
-                <ul class="errors">
-                    {% for error, value in street_form.errors.items() %}
-                    <li>{{ error }} {{value}}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                <input type="submit">
+                            <!-- <th>Date of Change</th>
+                            <th>Source</th>-->
+
+                            <th>Remove?</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nested in street_form.successors %}
+                        <tr>
+                            <td>{{nested.to_id}}</td>
+                            <!--  <td>{{nested.date}}</td>
+                            <td>{{nested.note}}</td> -->
+                            <td>{{nested.remove}}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <th>add a sucessor street</th>
+                            </tg>
+                        </tr>
+
+                        <tr>
+                            <td>{{street_form.new_successor_street}}</td>
+                            <!----  <td>{{street_form.new_successor_street_date}}</td>
+                            <td>{{street_form.new_successor_street_note}}</td> -->
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>Historical Note</h3>
+                {{street_form.historical_note(class_="form-control")}}
+
+            </div>
+            <div class="row">
+                <div class="col">
+
+                    <h3>Source Notes</h3>
+                    {{street_form.text(class_="form-control")}}
+
+                </div>
             </div>
 
+
+
+
+            {% if street_form.errors %}
+            <ul class="errors">
+                {% for error, value in street_form.errors.items() %}
+                <li>{{ error }} {{value}}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <input type="submit" value="submit">
         </div>
-    </form>
+
+</div>
+</form>
 </div>
 
 

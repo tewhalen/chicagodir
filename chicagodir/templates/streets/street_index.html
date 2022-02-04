@@ -4,91 +4,122 @@
 
 
 <div class="container">
-    <div class="card border border-secondary" style="width: 23rem;">
-        <div class="card-body">
-            {% if street.current %}
+    <div class="row">
+        <div class="card border border-secondary" style="width: 23rem;">
+            <div class="card-body">
+                {% if street.current %}
 
-            <div class="card-title text-center bg-primary border border-secondary text-white">
-                Current Street<br />
-                <h2>{{street.full_name}} </h2>
-            </div>
-            {% else %}
-            <div class="card-title text-center bg-secondary border border-secondary text-white">
-                {{street.retirement_info() }}<br />
-                <h2>
-                    {{street.full_name}} </h2>
-            </div>
-            {% endif %}
-            <h4 class="card-subtitle">{{street.grid_location}}{{street.grid_direction}} | from
-                {{street.min_address}}
-                to
-                {{street.max_address}}
-            </h4>
-            {% if current_user and current_user.is_authenticated %}
-            <a href="edit">(edit)</a>
-            {% endif %}
-            <div>{{street.historical_note}}</div>
-            <!-- <div>dates: {{street.start_date}}
+                <div class="card-title text-center bg-primary border border-secondary text-white">
+                    Current Street<br />
+                    <h2>{{street.full_name}} </h2>
+                </div>
+                {% else %}
+                <div class="card-title text-center bg-secondary border border-secondary text-white">
+                    {{street.retirement_info() }}<br />
+                    <h2>
+                        {{street.full_name}} </h2>
+                </div>
+                {% endif %}
+                <h4 class="card-subtitle">{{street.grid_location}}{{street.grid_direction}} | from
+                    {{street.min_address}}
+                    to
+                    {{street.max_address}}
+                </h4>
+                {% if current_user and current_user.is_authenticated %}
+                <a href="edit">(edit)</a>
+                {% endif %}
+                <div>{{street.historical_note}}</div>
+                <!-- <div>dates: {{street.start_date}}
                 {{street.end_date}}
             </div> -->
 
+            </div>
         </div>
+
     </div>
+    <div class="container px-4 py-5" id="icon-grid">
 
-
-    <div class="row">
-        {% if street.predecessor_changes().count() %}
-        <div class="card" style="width: 23rem;">
-            <div class="card-body">
-                <h4 class="card-title ">Predecessors</h4>
-                <ul>
-                    {% for page in street.predecessor_changes() %}
-                    <ul><a href="/street/{{page.from_street.street_id}}">{{page.from_street.full_name}}</a>
-                        ({{page.from_street.short_info()}})
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-5">
+            {% if street.predecessor_changes().count() %}
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#bootstrap"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Predecessors</h4>
+                    <ul>
+                        {% for page in street.predecessor_changes() %}
+                        <ul><a
+                                href="{{ url_for('street.view_street', tag=page.from_street.street_id) }}">{{page.from_street.full_name}}</a>
+                            ({{page.from_street.short_info()}})
+                        </ul>
+                        {% endfor %}
                     </ul>
-                    {% endfor %}
-                </ul>
+                </div>
             </div>
-        </div>
-        {% endif %}
-        {% if street.successor_changes().count() %}
-        <div class="card" style="width: 23rem;">
-            <div class="card-body">
-                <h4 class="card-title ">Successors</h4>
+            {% endif %}
+            {% if street.successor_changes().count() %}
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#cpu-fill"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Successors</h4>
+                    <ul>
+                        {% for page in street.successor_changes() %}
+                        <li><a
+                                href="{{ url_for('street.view_street', tag=page.to_street.street_id) }}">{{page.to_street.full_name}}</a>
+                            {{page.to_street.short_info()}}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+            {% if street.similar_streets().count() %}
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#calendar3"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Similarly named streets</h4>
+                    <ul>
+                        {% for similar_street in street.similar_streets() %}
+                        <li><a
+                                href="{{ url_for('street.view_street', tag=similar_street.street_id) }}">{{similar_street.full_name}}</a>
+                            {{similar_street.short_tag()}}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#home"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Source Notes</h4>
+                    <p>{{source_notes|safe}}</p>
+                </div>
+            </div>
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#speedometer2"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Edit History</h4>
+                    <p> {% for edit in street.edits %}
+                        {{edit.timestamp}} {{edit.user}} {{edit.note}}<br> {% endfor %}</p>
+                </div>
+            </div>
 
-                <ul>
-                    {% for page in street.successor_changes() %}
-                    <li><a href="/street/{{page.to_street.street_id}}">{{page.to_street.full_name}}</a>
-                        {{page.to_street.short_info()}}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
         </div>
-        {% endif %}
-        {% if street.similar_streets().count() %}
-        <div class="card" style="width: 23rem;">
-            <div class="card-body">
-                <h4 class="card-title ">Similarly named streets</h4>
+    </div>
 
-                <ul>
-                    {% for street in street.similar_streets() %}
-                    <li><a href="/street/{{street.street_id}}">{{street.full_name}}</a> {{street.short_info()}}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    <div>
-        <h5 class="card-title">Source Notes</h5>
-        <div>{{source_notes|safe}}</div>
-    </div>
-    <div>
-        <h5>Edit history</h5>
-        {% for edit in street.edits %}
-        {{edit.timestamp}} {{edit.user}} {{edit.note}}<br> {% endfor %}
-    </div>
+
+
+
+
 </div>
 {% endblock %}

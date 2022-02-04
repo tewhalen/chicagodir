@@ -175,6 +175,12 @@ class Street(PkModel):
         else:
             return "current"
 
+    def short_tag(self, suppress_current=True):
+        if suppress_current and self.current:
+            return ""
+        else:
+            return "({})".format(self.short_info())
+
     def retirement_info(self):
         if self.current:
             return ""

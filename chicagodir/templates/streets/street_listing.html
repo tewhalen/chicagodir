@@ -15,10 +15,11 @@
 
   <header class="py-3 mb-4 border-bottom">
     <div class="container d-flex flex-wrap justify-content-center">
-      <a href="/" class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto text-dark text-decoration-none">
+      <a href="/street/" class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto text-dark text-decoration-none">
         <i class="fas fa-road"></i>
-        <span class="fs-4">Chicago streets as of {{year_str}}</span>
+        <span class="fs-4">Chicago streets {{year_str}}</span>
       </a>
+
       <form method="get" class="col-12 col-lg-auto mb-3 mb-lg-0 ">
         <div class="row g-2">
 
@@ -41,7 +42,9 @@
       </form>
     </div>
   </header>
-
+  {%if total_count %}
+  <p>{{total_count}} streets found</p>
+  {% endif %}
   <div class="accordion" id="accordionExample">
     <div class="card">
       {% for street_group in current_streets %}
@@ -60,14 +63,17 @@
           <div class="col-sm">
             <ul>
               {% for street in street_group[:25] %}
-              <li><a href="{{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a></li>
+              <li><a href="{{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}
+                </a>{{street.short_tag()}}</li>
               {% endfor %}
             </ul>
           </div>
           <div class="col-sm">
             <ul>
               {% for street in street_group[25:50] %}
-              <li><a href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a></li>
+              <li><a
+                  href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>{{street.short_tag()}}
+              </li>
               {% endfor %}
             </ul>
           </div>
@@ -75,14 +81,18 @@
           <div class="col-sm">
             <ul>
               {% for street in street_group[50:75] %}
-              <li><a href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a></li>
+              <li><a
+                  href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>{{street.short_tag()}}
+              </li>
               {% endfor %}
             </ul>
           </div>
           <div class="col-sm">
             <ul>
               {% for street in street_group[75:] %}
-              <li><a href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a></li>
+              <li><a
+                  href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>{{street.short_tag()}}
+              </li>
               {% endfor %}
             </ul>
           </div>

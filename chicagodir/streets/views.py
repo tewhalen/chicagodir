@@ -56,7 +56,7 @@ blueprint = Blueprint("street", __name__, static_folder="../static")
 def street_listing():
     """Show all the known streets."""
     form = StreetSearchForm(request.args)
-    year_str = "today"
+    year_str = "as of today"
     if request.query_string and form.validate():
         q = db.session.query(Street)
         if form.year.data:
@@ -67,7 +67,7 @@ def street_listing():
                 ((Street.start_date < first_of_year) | (Street.start_date == None))
                 & ((Street.end_date > first_of_year) | (Street.end_date == None))
             )
-            year_str = str(year)
+            year_str = "as of {}".format(str(year))
 
         if form.name.data:
             q = q.filter(Street.name.ilike("%" + form.name.data + "%"))
@@ -87,7 +87,7 @@ def street_listing():
         current_streets = streets_sorted(
             db.session.query(Street).filter(Street.current == True).all()
         )
-
+    total_count = len(current_streets)
     street_groups = []
     for i in range(0, len(current_streets), 100):
         street_groups.append(current_streets[i : i + 100])
@@ -98,31 +98,63 @@ def street_listing():
         # withdrawn_streets=Street.query.filter_by(current=False).all(),
         search_form=form,
         year_str=year_str,
+        total_count=total_count,
     )
 
 
-@blueprint.route("/street/year/<int:year>", methods=["GET", "POST"])
-def street_listing_by_year(year):
+@blueprint.route(
+    "/street/missing_start/",
+    methods=[
+        "GET",
+    ],
+)
+def missing_start():
     """Show all the known streets."""
-
-    first_of_year = datetime.date(month=1, day=1, year=year)
-
+    form = StreetSearchForm(request.args)
     current_streets = streets_sorted(
-        db.session.query(Street)
-        .filter(
-            ((Street.start_date < first_of_year) | (Street.start_date == None))
-            & ((Street.end_date > first_of_year) | (Street.end_date == None))
-        )
-        .all()
+        db.session.query(Street).filter(Street.start_date == None).all()
     )
+    total_count = len(current_streets)
 
     street_groups = []
     for i in range(0, len(current_streets), 100):
         street_groups.append(current_streets[i : i + 100])
     # street_groups = itertools.zip_longest(current_streets * 100)
     return render_template(
-        "streets/street_by_year.html",
+        "streets/street_listing.html",
         current_streets=street_groups,
+        search_form=form,
+        year_str="missing start year",
+        total_count=total_count,
+    )
+
+
+@blueprint.route(
+    "/street/missing_end/",
+    methods=[
+        "GET",
+    ],
+)
+def missing_end():
+    """Show all the known streets."""
+    form = StreetSearchForm(request.args)
+    current_streets = streets_sorted(
+        db.session.query(Street)
+        .filter((Street.end_date == None) & (Street.current != True))
+        .all()
+    )
+    total_count = len(current_streets)
+
+    street_groups = []
+    for i in range(0, len(current_streets), 100):
+        street_groups.append(current_streets[i : i + 100])
+    # street_groups = itertools.zip_longest(current_streets * 100)
+    return render_template(
+        "streets/street_listing.html",
+        current_streets=street_groups,
+        search_form=form,
+        year_str="missing retirement year",
+        total_count=total_count,
     )
 
 

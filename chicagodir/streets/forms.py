@@ -34,13 +34,28 @@ from .models import Street, StreetChange
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
 
 
+def int_or_none(x):
+    try:
+        return int(x)
+    except TypeError:
+        return None
+    except ValueError:
+        return None
+
+
+year_choices = [(None, "")] + [
+    (i, str(i)) for i in reversed(range(1833, datetime.date.today().year + 1))
+]
+
+
 class StreetSearchForm(Form):
     name = StringField("Name", validators=[Optional(), Length(max=40)])
     year = SelectField(
         "Year",
-        coerce=int,
+        coerce=int_or_none,
         validators=[Optional()],
-        choices=list(reversed(range(1833, datetime.date.today().year + 1))),
+        choices=year_choices
+        # list(reversed(range(1833, datetime.date.today().year + 1))),
         # default=datetime.date.today().year,
     )
     confirmed = BooleanField("Confirmed")
@@ -56,15 +71,6 @@ class ChangeForm(Form):
         coerce=int,
     )
     # from_id = SelectField("Street", coerce=int)
-
-
-def int_or_none(x):
-    try:
-        return int(x)
-    except TypeError:
-        return None
-    except ValueError:
-        return None
 
 
 class StreetEditForm(FlaskForm):
