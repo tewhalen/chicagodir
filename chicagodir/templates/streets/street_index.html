@@ -26,7 +26,9 @@
                     {{street.max_address}}
                 </h4>
                 {% if current_user and current_user.is_authenticated %}
-                <a href="edit">(edit)</a>
+                <a class="btn btn-primary" href="edit">edit</a>
+                {% else %}
+                <a href="{{url_for('public.register')}}">[create an account to edit]</a>
                 {% endif %}
                 <div>{{street.historical_note}}</div>
                 <!-- <div>dates: {{street.start_date}}
@@ -47,9 +49,9 @@
                 </svg>
                 <div>
                     <h4 class="fw-bold mb-0">Predecessors</h4>
-                    <ul>
+                    <ul class="list-group">
                         {% for page in street.predecessor_changes() %}
-                        <ul><a
+                        <ul class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=page.from_street.street_id) }}">{{page.from_street.full_name}}</a>
                             ({{page.from_street.short_info()}})
                         </ul>
@@ -65,9 +67,9 @@
                 </svg>
                 <div>
                     <h4 class="fw-bold mb-0">Successors</h4>
-                    <ul>
+                    <ul class="list-group">
                         {% for page in street.successor_changes() %}
-                        <li><a
+                        <li class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=page.to_street.street_id) }}">{{page.to_street.full_name}}</a>
                             {{page.to_street.short_info()}}
                         </li>
@@ -83,9 +85,9 @@
                 </svg>
                 <div>
                     <h4 class="fw-bold mb-0">Similarly named streets</h4>
-                    <ul>
+                    <ul class="list-group">
                         {% for similar_street in street.similar_streets() %}
-                        <li><a
+                        <li class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=similar_street.street_id) }}">{{similar_street.full_name}}</a>
                             {{similar_street.short_tag()}}
                         </li>
@@ -110,7 +112,25 @@
                 <div>
                     <h4 class="fw-bold mb-0">Edit History</h4>
                     <p> {% for edit in street.edits %}
-                        {{edit.timestamp}} {{edit.user}} {{edit.note}}<br> {% endfor %}</p>
+                        {{edit.timestamp}} {{edit.user.username}} {{edit.note}}<br> {% endfor %}
+                    </p>
+                </div>
+            </div>
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#speedometer2"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Data Issues</h4>
+                    <ul class="list-group"> {% for issue in street.data_issues() %}
+                        <li class="list-group-item list-group-item-{{issue.level}}"><i class="{{issue.icon}}"></i>
+                            {{issue.issue}}</li> {% endfor %}
+                    </ul>
+                    {% if current_user and current_user.is_authenticated %}
+                    <a class="btn btn-primary" href="edit">edit</a>
+                    {% else %}
+                    <a class="btn btn-primary" href="{{url_for('public.register')}}">create an account to edit</a>
+                    {% endif %}
                 </div>
             </div>
 
