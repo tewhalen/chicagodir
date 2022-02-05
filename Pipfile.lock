@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "94974ec6ff589fc7d8706744c03e4df78395ba9ae3a0bb8804bed250663ca538"
+            "sha256": "d79b6efcdc0af8ac94672f49116b63fcdfce96ce3cc498d92c49a2a5db6015af"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -306,7 +306,7 @@
                 "sha256:fa877ca7f6b48054f847b61d6fa7bed5cebb663ebc55e018fda12db09dcc664c",
                 "sha256:fdcec0b8399108577ec290f55551d926d9a1fa6cad45882093a7a07ac5ec147b"
             ],
-            "markers": "platform_python_implementation == 'CPython'",
+            "markers": "python_version >= '3' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))",
             "version": "==1.1.2"
         },
         "gunicorn": {
@@ -577,11 +577,11 @@
         },
         "supervisor": {
             "hashes": [
-                "sha256:4adf63c8f18cf42313171ce06a73c9ae2c5e88ef27c2bb0de3b8405368595c04",
-                "sha256:5b2b8882ec8a3c3733cce6965cc098b6d80b417f21229ab90b18fe551d619f90"
+                "sha256:40dc582ce1eec631c3df79420b187a6da276bbd68a4ec0a8f1f123ea616b97a2",
+                "sha256:bbae57abf74e078fe0ecc9f30068b6da41b840546e233ef1e659a12e4c875af6"
             ],
             "index": "pypi",
-            "version": "==4.2.2"
+            "version": "==4.2.4"
         },
         "validators": {
             "hashes": [
@@ -750,11 +750,11 @@
         },
         "faker": {
             "hashes": [
-                "sha256:1dc2811f20e163892fefe7006f2ce00778f8099a40aee265bfa60a13400de63d",
-                "sha256:aa7103805ae793277abbb85da9f6f05e76a1a295a9384a8e17c2fba2b3a690cb"
+                "sha256:534c9410cd003b794900504d37f0afaf8275bfe8865583250799f696cf227cd3",
+                "sha256:820e55f62b428a4d55f6700358167e84a6ba3f8371e9ef39f9ca03a504dcae18"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==12.0.1"
+            "version": "==12.1.0"
         },
         "fancycompleter": {
             "hashes": [
