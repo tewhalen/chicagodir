@@ -2,6 +2,7 @@
 """Street models."""
 
 import re
+
 from sqlalchemy.sql import expression
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship

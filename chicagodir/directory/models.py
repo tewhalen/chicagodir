@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 """Directory models."""
-from ast import Add
-import datetime as dt
-from email.policy import default
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
-from chicagodir.extensions import bcrypt
 from chicagodir.streets.models import Street
 
 

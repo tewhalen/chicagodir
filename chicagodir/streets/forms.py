@@ -1,35 +1,20 @@
 # -*- coding: utf-8 -*-
 """Street forms."""
-from calendar import c
-from email.policy import default
-from xmlrpc.client import Boolean
+import datetime
+
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField,
-    SelectField,
-    IntegerField,
-    DateField,
     BooleanField,
-    TextAreaField,
+    DateField,
     FieldList,
     Form,
     FormField,
-    Field,
+    IntegerField,
+    SelectField,
+    StringField,
+    TextAreaField,
 )
-from wtforms.validators import (
-    DataRequired,
-    Email,
-    EqualTo,
-    Length,
-    NumberRange,
-    Optional,
-)
-from flask import current_app
-from wtforms.widgets import Input
-
-import datetime
-
-from .models import Street, StreetChange
+from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
 

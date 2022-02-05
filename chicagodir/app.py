@@ -5,7 +5,7 @@ import sys
 
 from flask import Flask, render_template
 
-from chicagodir import commands, public, user, directory, streets
+from chicagodir import commands, directory, public, streets, user
 from chicagodir.extensions import (
     bcrypt,
     cache,

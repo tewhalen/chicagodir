@@ -1,34 +1,30 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
+import datetime
+import re
+
+import markdown
 from flask import (
     Blueprint,
+    abort,
     current_app,
-    flash,
     redirect,
     render_template,
     request,
     url_for,
-    abort,
 )
-from flask_login import login_required, login_user, logout_user, current_user
-from chicagodir.database import db
-from chicagodir.extensions import login_manager
-from chicagodir.streets.models import Street, StreetEdit, StreetChange
-from chicagodir.utils import flash_errors
-from .forms import StreetEditForm, StreetSearchForm
+from flask_login import current_user, login_required
 from sqlalchemy import inspect
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-import markdown
-import itertools
+from chicagodir.database import db
+from chicagodir.streets.models import Street, StreetChange
 
-import os
-import re
-import csv
-import datetime
+from .forms import StreetEditForm, StreetSearchForm
 
 
 def atoi(text):
+    """Convert text to an integer if possible, else return the string."""
     return int(text) if text.isdigit() else text
 
 
@@ -42,10 +38,12 @@ def natural_keys(text):
 
 
 def street_key(street: Street):
+    """Given a street object, return an appropriate sorting key."""
     return natural_keys(street.name + " " + street.suffix + " " + street.direction)
 
 
 def streets_sorted(streets):
+    """Sort street objects using appropriate key."""
     return sorted(streets, key=street_key)
 
 
@@ -64,15 +62,15 @@ def street_listing():
             year = form.year.data
             first_of_year = datetime.date(month=1, day=1, year=year)
             q = q.filter(
-                ((Street.start_date < first_of_year) | (Street.start_date == None))
-                & ((Street.end_date > first_of_year) | (Street.end_date == None))
+                ((Street.start_date < first_of_year) | (Street.start_date is None))
+                & ((Street.end_date > first_of_year) | (Street.end_date is None))
             )
             year_str = "as of {}".format(str(year))
 
         if form.name.data:
             q = q.filter(Street.name.ilike("%" + form.name.data + "%"))
 
-        if form.confirmed.data != None:
+        if form.confirmed.data is not None:
 
             q = q.filter(Street.confirmed == form.confirmed.data)
 
@@ -85,7 +83,7 @@ def street_listing():
 
     else:
         current_streets = streets_sorted(
-            db.session.query(Street).filter(Street.current == True).all()
+            db.session.query(Street).filter(Street.current is True).all()
         )
     total_count = len(current_streets)
     street_groups = []
@@ -112,7 +110,7 @@ def missing_start():
     """Show all the known streets."""
     form = StreetSearchForm(request.args)
     current_streets = streets_sorted(
-        db.session.query(Street).filter(Street.start_date == None).all()
+        db.session.query(Street).filter(Street.start_date is None).all()
     )
     total_count = len(current_streets)
 
@@ -140,7 +138,7 @@ def missing_end():
     form = StreetSearchForm(request.args)
     current_streets = streets_sorted(
         db.session.query(Street)
-        .filter((Street.end_date == None) & (Street.current != True))
+        .filter((Street.end_date is None) & (Street.current is not True))
         .all()
     )
     total_count = len(current_streets)
@@ -160,6 +158,7 @@ def missing_end():
 
 @blueprint.route("/street/<string:tag>/", methods=["GET", "POST"])
 def view_street(tag: str):
+    """Let's look at a historical street."""
     try:
         d = Street.query.filter_by(street_id=tag).first_or_404()
     except NoResultFound:
@@ -176,6 +175,7 @@ def view_street(tag: str):
 @blueprint.route("/street/<string:tag>/edit", methods=["GET", "POST"])
 @login_required
 def edit_street(tag: str):
+    """Editing a street."""
     try:
         d = Street.query.filter_by(street_id=tag).one()
     except NoResultFound:
@@ -183,6 +183,7 @@ def edit_street(tag: str):
     except MultipleResultsFound:
         abort(500)
 
+    # WTForms is weird when the method is GET
     if request.method != "GET":
         form = StreetEditForm(request.form, obj=d)
     else:
@@ -200,7 +201,7 @@ def edit_street(tag: str):
             for street in streets_sorted(
                 db.session.query(Street)
                 .filter(
-                    ((Street.start_date < d.end_date) | (Street.start_date == None))
+                    ((Street.start_date <= d.end_date) | (Street.start_date is None))
                 )
                 .all()
             )
@@ -222,6 +223,10 @@ def edit_street(tag: str):
                     to_remove.to_street.full_name, to_remove.to_street.street_id
                 ),
             )
+            to_remove.to_street.record_edit(
+                current_user,
+                "removed predecessor {} ({})".format(d.full_name, d.street_id),
+            )
             to_remove.delete()
 
         #  check for new successor street
@@ -238,6 +243,10 @@ def edit_street(tag: str):
                 "added successor {} ({})".format(
                     new_successor.to_street.full_name, new_successor.to_street.street_id
                 ),
+            )
+            new_successor.to_street.record_edit(
+                current_user,
+                "added predecessor {} ({})".format(d.full_name, d.street_id),
             )
 
         for attr in inspect(d).attrs:
