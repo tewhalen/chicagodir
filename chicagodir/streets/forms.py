@@ -19,7 +19,8 @@ from wtforms.validators import DataRequired, Length, NumberRange, Optional
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
 
 
-def int_or_none(x):
+def int_or_none(x) -> int:
+    """Either convert x to an int or return None."""
     try:
         return int(x)
     except TypeError:
@@ -34,6 +35,8 @@ year_choices = [(None, "")] + [
 
 
 class StreetSearchForm(Form):
+    """The form for searching for a street."""
+
     name = StringField("Name", validators=[Optional(), Length(max=40)])
     year = SelectField(
         "Year",
@@ -47,6 +50,7 @@ class StreetSearchForm(Form):
 
 
 class ChangeForm(Form):
+    """The subform for modifying a successor/predecessor change."""
 
     date = DateField("Date of Change", validators=[Optional()])
     note = StringField("Note", validators=[Optional()])
@@ -104,3 +108,10 @@ class StreetEditForm(FlaskForm):
         "Street",
         coerce=int_or_none,
     )
+
+    def set_street_choices(self, street_choices):
+        """Set up for proper street choices."""
+        for successor in self.successors:
+            successor.to_id.choices = street_choices
+
+        self.new_successor_street.choices = [(None, "")] + street_choices

@@ -1,11 +1,14 @@
 #!/bin/env/python
 
+"""Loads from initial CSV into database."""
+
 import csv
 
 import psycopg2
 
 
-def int_or_none(string):
+def int_or_none(string) -> int:
+    """Turns string into an integer or None."""
     try:
         return int(string)
     except ValueError:
@@ -13,6 +16,7 @@ def int_or_none(string):
 
 
 def fix_text_note(text):
+    """Wrap CHS document text."""
     if not text:
         return ""
     else:
@@ -38,18 +42,18 @@ if __name__ == "__main__":
             row["text"] = fix_text_note(row["text"])
             # print(row)
             cur.execute(
-                """INSERT INTO streets (id, street_id, direction, name, suffix, suffix_direction, 
-                            current, historical_note, text, grid_location, grid_direction, min_address, 
-                            max_address) VALUES (%(id)s, %(entry_uid)s, %(Direction)s, 
-                            %(Street)s, %(Suffix)s, 
-                            %(Suffix_Direction)s, True, %(Note)s, %(text)s, %(grid_location)s, 
+                """INSERT INTO streets (id, street_id, direction, name, suffix, suffix_direction,
+                            current, historical_note, text, grid_location, grid_direction, min_address,
+                            max_address) VALUES (%(id)s, %(entry_uid)s, %(Direction)s,
+                            %(Street)s, %(Suffix)s,
+                            %(Suffix_Direction)s, True, %(Note)s, %(text)s, %(grid_location)s,
                             %(grid_direction)s, %(min_address)s, %(max_address)s)
             """,
                 row,
             )
             if row["text"]:
                 cur.execute(
-                    """INSERT INTO streets_edits (street_id, user_id, note) VALUES 
+                    """INSERT INTO streets_edits (street_id, user_id, note) VALUES
                     (%(id)s, 1, 'imported from city data portal and CHS "Street Names" document');""",
                     row,
                 )
@@ -77,15 +81,15 @@ if __name__ == "__main__":
             row["id"] = street_n
             # print(row)
             cur.execute(
-                """INSERT INTO streets (id, street_id, direction, name, suffix, suffix_direction, 
-                            current, historical_note, text, grid_location, grid_direction) 
-                            VALUES (%(id)s, %(entry_uid)s, %(Direction)s, %(Street)s, %(Suffix)s, 
+                """INSERT INTO streets (id, street_id, direction, name, suffix, suffix_direction,
+                            current, historical_note, text, grid_location, grid_direction)
+                            VALUES (%(id)s, %(entry_uid)s, %(Direction)s, %(Street)s, %(Suffix)s,
                             %(Suffix_Direction)s, False, %(Note)s, %(text)s, %(grid_location)s, %(grid_direction)s)
             """,
                 row,
             )
             cur.execute(
-                """INSERT INTO streets_edits (street_id, user_id, note) 
+                """INSERT INTO streets_edits (street_id, user_id, note)
                 VALUES (%(id)s, 1, 'imported from CHS "Street Names" document');""",
                 row,
             )
@@ -104,7 +108,7 @@ if __name__ == "__main__":
             for mapping in row[1:]:
                 d = {"entry_id": entry_id, "to_id": id_map[mapping]}
                 cur.execute(
-                    """INSERT INTO streetchange (type, note, from_id, to_id) 
+                    """INSERT INTO streetchange (type, note, from_id, to_id)
                     VALUES ('REPLACE', 'from CHS listing', %(entry_id)s, %(to_id)s);""",
                     d,
                 )

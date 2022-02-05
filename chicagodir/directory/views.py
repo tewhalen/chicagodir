@@ -35,12 +35,14 @@ def new_directory():
 
 @blueprint.route("/dir/<string:tag>/", methods=["GET", "POST"])
 def view_directory(tag: str):
+    """Show the pages in a directory."""
     d = Directory.query.filter_by(tag=tag).one()
     return render_template("dir/direct_index.html", directory=d)
 
 
 @blueprint.route("/dir/<string:tag>/p/<int:page>", methods=["GET", "POST"])
 def view_page(tag: str, page: int):
+    """View a single page of a directory."""
     d = Directory.query.filter_by(tag=tag).one()
     page = Page.query.filter_by(directory_id=d.id, number=page).first()
     return render_template("dir/page_listing.html", directory=d, page=page)
@@ -48,6 +50,7 @@ def view_page(tag: str, page: int):
 
 @blueprint.route("/dir/<string:tag>/p/<int:page_id>/fix", methods=["GET", "POST"])
 def fix_page(tag: str, page_id: int):
+    """Apply standard fixes to a page of a directory."""
     d = Directory.query.filter_by(tag=tag).one()
     page = Page.query.filter_by(directory_id=d.id, number=page_id).first()
     for entry in page.entries:
@@ -60,6 +63,7 @@ def fix_page(tag: str, page_id: int):
 @blueprint.route("/dir/<string:tag>/page/upload", methods=["GET", "POST"])
 @login_required
 def upload_csv(tag: str):
+    """Upload a csv file representing a page of a directory."""
     d = Directory.query.filter_by(tag=tag).one()
     if request.method == "POST":
         # check if the post request has the file part

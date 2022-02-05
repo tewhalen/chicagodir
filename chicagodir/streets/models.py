@@ -3,6 +3,7 @@
 
 import re
 
+from sqlalchemy import inspect
 from sqlalchemy.sql import expression
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
@@ -30,22 +31,31 @@ post_type_map = {
 
 
 def atoi(text):
+    """Convert text to an integer if possible."""
     return int(text) if text.isdigit() else text
 
 
 def numeric_split(text):
-    """
-    split into (numeric)(alpha)
-    """
+    """Use regex to split text into (numeric)(alpha)."""
     return re.match(r"(\d+)([^\d\s]+)", text)
 
 
 def fix_street_type(raw_post_type: str) -> str:
+    """Standardize street type into uppercase abbreviation."""
     converted = raw_post_type.strip(".,").upper().strip()
     return post_type_map.get(converted, converted)
 
 
 def fix_ordinal(text: str) -> str:
+    """Some historical documents have non-standard ordinals and this fixes them.
+
+    23nd -> 23RD
+    17th -> 17TH
+    2RD -> 2ND
+    11nd -> 11TH
+    21nd -> 21ST
+    etc.
+    """
     m = numeric_split(text)
     if not m:
         return text
@@ -62,6 +72,7 @@ def fix_ordinal(text: str) -> str:
 
 
 def fix_street_name(raw_street_name: str) -> str:
+    """Repair potentially weird street names by uppercasing and fixing weird ordinals."""
     street_name = raw_street_name.upper()
     street_name = fix_ordinal(street_name)
 
@@ -69,6 +80,7 @@ def fix_street_name(raw_street_name: str) -> str:
 
 
 def street_title_case(raw_street_name: str) -> str:
+    """Put a street name back into title case."""
     return " ".join(x.capitalize() for x in re.split(r"(\s+)", raw_street_name))
 
 
@@ -137,7 +149,8 @@ class Street(PkModel):
         return f"<Street({self.name})>"
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
+        """The full name of the street."""
         return " ".join(
             [
                 self.direction or "",
@@ -148,20 +161,17 @@ class Street(PkModel):
         )
 
     @property
-    def successors(self):
-        return [
-            change.to_street
-            for change in StreetChange.query.filter(StreetChange.from_id == self.id)
-        ]
+    def successors(self) -> "list[Street]":
+        """A list of successor streets."""
+        return [change.to_street for change in self.successor_changes()]
 
     @property
-    def predecessors(self):
-        return [
-            change.from_street
-            for change in StreetChange.query.filter(StreetChange.to_id == self.id)
-        ]
+    def predecessors(self) -> "list[Street]":
+        """A list of predecessor streets."""
+        return [change.from_street for change in self.predecessor_changes()]
 
-    def short_info(self):
+    def short_info(self) -> str:
+        """Short text for after the name of a street to indicate historical status/context."""
         if not self.current:
             year = ""
             if self.end_date:
@@ -176,34 +186,55 @@ class Street(PkModel):
         else:
             return "current"
 
-    def short_tag(self, suppress_current=True):
+    def short_tag(self, suppress_current=True) -> str:
+        """Possible short tag for after the name of a street to indicate historical status/context."""
+
         if suppress_current and self.current:
             return ""
         else:
             return "({})".format(self.short_info())
 
-    def retirement_info(self):
+    def retirement_info(self) -> str:
+        """Short bit of info indicating the retired/vacated status of a street."""
         if self.current:
             return ""
         else:
             year = ""
             if self.end_date:
                 year = self.end_date.year
-            return "Retired {}".format(year)
+            if self.vacated:
+                return "Vacated {}".format(year)
+            else:
+                return "Retired {}".format(year)
 
     def successor_changes(self):
+        """Query the sucessor associations."""
         return StreetChange.query.filter_by(from_id=self.id)
 
     def predecessor_changes(self):
+        """Query the prdececssor associations."""
         return StreetChange.query.filter(StreetChange.to_id == self.id)
 
     def similar_streets(self):
+        """Find similarly-named streets."""
         return Street.query.filter(
             db.and_(Street.name == self.name, Street.id != self.id)
         )
 
+    def contemporary_streets(self):
+        """Other streets which are extant at the time of this street."""
+        q = db.session.query(Street)
+        if self.end_date is not None:
+            q.filter(
+                ((Street.start_date <= self.end_date) | (Street.start_date is None))
+            )
+        if self.start_date is not None:
+            q.filter(((Street.end_date >= self.start_date) | (Street.end_date is None)))
+        return q.all()
+
     @classmethod
     def find_best_street(cls, name, suffix="", direction="", year=None):
+        """Given details, find the one matching street, if any."""
         print("looking for", direction, name, suffix, year)
         name = fix_street_name(name)
         matched_streets = Street.query.filter(Street.name == name).all()
@@ -228,13 +259,86 @@ class Street(PkModel):
         print("too many:", matched_streets)
 
     def record_edit(self, user, change: str):
+        """Record that an edit has been made to this street by a user."""
         change_object = StreetEdit(street=self, user=user, note=change)
 
         change_object.save()
 
+    def data_issues(self) -> list:
+        """Report out the data issues with this street that a user might like to fix."""
+        issues = []
+        if not self.confirmed:
+            issues.append(
+                {
+                    "issue": "unconfirmed",
+                    "icon": "far fa-question-circle",
+                    "level": "info",
+                }
+            )
+        if not self.current and self.end_date is None:
+            issues.append(
+                {
+                    "issue": "no end date",
+                    "icon": "far fa-calendar-times",
+                    "level": "warning",
+                }
+            )
+        if self.start_date is None:
+            issues.append(
+                {
+                    "issue": "no start date",
+                    "icon": "far fa-calendar-times",
+                    "level": "warning",
+                }
+            )
+        if not self.current and not self.successors and not self.vacated:
+            issues.append(
+                {
+                    "issue": "no sucessors and not vacated",
+                    "icon": "fas fa-code-branch",
+                    "level": "warning",
+                }
+            )
+        if self.weird:
+            issues.append(
+                {
+                    "issue": "marked as weird",
+                    "icon": "fas fa-asterisk",
+                    "level": "danger",
+                }
+            )
+        if not self.min_address or not self.max_address:
+            issues.append(
+                {
+                    "issue": "missing min/max addresses",
+                    "icon": "fas fa-map-marked-alt",
+                    "level": "warning",
+                }
+            )
+        if not self.grid_location and not self.diagonal:
+            issues.append(
+                {
+                    "issue": "missing grid location",
+                    "icon": "fas fa-border-none",
+                    "level": "warning",
+                }
+            )
+
+        return issues
+
+    def record_changes(self, current_user):
+        """Inspect using sqlalchemy and record changes."""
+        changes = {}
+
+        for attr in inspect(self).attrs:
+            if attr.history.has_changes():
+                changes[attr.key] = attr.history.added
+        if changes:
+            self.record_edit(current_user, str(changes))
+
 
 class StreetChange(PkModel):
-    """a renaming or other change to a street"""
+    """An association between two streets indicating a renaming or other change."""
 
     __tablename__ = "streetchange"
 
@@ -252,7 +356,7 @@ class StreetChange(PkModel):
 
 
 class StreetEdit(PkModel):
-    """tracking user or system changes to a street in this database"""
+    """A record of a user or system edit to a street in this database."""
 
     __tablename__ = "streets_edits"
 
@@ -272,7 +376,7 @@ class StreetEdit(PkModel):
 
 
 class StreetList(PkModel):
-    """A reference work that has a list of streets extant in a year"""
+    """A reference work that has a list of streets extant in a year."""
 
     __tablename__ = "street_lists"
 
@@ -286,6 +390,8 @@ class StreetList(PkModel):
 
 
 class StreetListEntry(PkModel):
+    """An entry in a list of streets."""
+
     __tablename__ = "street_list_entries"
 
     list_id = reference_col("street_lists")

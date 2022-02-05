@@ -6,6 +6,7 @@ from chicagodir.streets.models import Street
 
 
 def get_all_jobs():
+    """Find all the professions in the known directories."""
     return (
         db.session.query(Entry.profession, db.func.count(Entry.id))
         .group_by(Entry.profession)
@@ -26,6 +27,7 @@ class Directory(PkModel):
         return f"<Dir({self.year}|{self.name!r})>"
 
     def new_page(self, csv_output):
+        """Add a new page."""
         new_page_num = csv_output[0]["page"]
         # check to see if page already exists
         existing_page = Page.query.filter(
@@ -89,6 +91,7 @@ class Page(PkModel):
 
 
 class Address(PkModel):
+    """An address within a directory."""
 
     __tablename__ = "d_address"
 
@@ -112,7 +115,8 @@ class Address(PkModel):
     street_id = reference_col("streets", nullable=True)
     street = relationship("Street", foreign_keys=[street_id])
 
-    def find_street(self):
+    def find_street(self) -> Street:
+        """Recalcuate the best street for this entry."""
         self.street = Street.find_best_street(
             name=self.street_name,
             suffix=self.street_name_post_type,
@@ -121,7 +125,8 @@ class Address(PkModel):
         )
         return self.street
 
-    def render(self):
+    def render(self) -> str:
+        """Render this as an address string."""
         return " ".join(
             map(
                 str,
@@ -144,10 +149,14 @@ class Address(PkModel):
 
 
 class HomeAddress(Address):
+    """A Home address."""
+
     __mapper_args__ = {"polymorphic_identity": "home"}
 
 
 class WorkAddress(Address):
+    """A work address."""
+
     __mapper_args__ = {"polymorphic_identity": "work"}
 
 

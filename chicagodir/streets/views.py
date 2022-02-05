@@ -14,7 +14,6 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import inspect
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from chicagodir.database import db
@@ -29,7 +28,8 @@ def atoi(text):
 
 
 def natural_keys(text):
-    """
+    """For use in sorting numeric and text stuff naturally, build keys.
+
     alist.sort(key=natural_keys) sorts in human order
     http://nedbatchelder.com/blog/200712/human_sorting.html
     (See Toothy's implementation in the comments)
@@ -172,6 +172,35 @@ def view_street(tag: str):
     )
 
 
+def remove_successor(street, change_to_remove):
+    """Remove an association to a successor street."""
+    street.record_edit(
+        current_user,
+        "removed sucessor {} ({})".format(
+            change_to_remove.to_street.full_name, change_to_remove.to_street.street_id
+        ),
+    )
+    change_to_remove.to_street.record_edit(
+        current_user,
+        "removed predecessor {} ({})".format(street.full_name, street.street_id),
+    )
+    change_to_remove.delete()
+
+
+def add_successor(street, new_successor):
+    """Record the addition of a new successor."""
+    street.record_edit(
+        current_user,
+        "added successor {} ({})".format(
+            new_successor.to_street.full_name, new_successor.to_street.street_id
+        ),
+    )
+    new_successor.to_street.record_edit(
+        current_user,
+        "added predecessor {} ({})".format(street.full_name, street.street_id),
+    )
+
+
 @blueprint.route("/street/<string:tag>/edit", methods=["GET", "POST"])
 @login_required
 def edit_street(tag: str):
@@ -189,45 +218,19 @@ def edit_street(tag: str):
     else:
         form = StreetEditForm(None, obj=d)
 
-    if d.end_date is None:
-
-        street_choices = [
-            (street.id, street.full_name)
-            for street in streets_sorted(db.session.query(Street).all())
-        ]
-    else:
-        street_choices = [
-            (street.id, street.full_name)
-            for street in streets_sorted(
-                db.session.query(Street)
-                .filter(
-                    ((Street.start_date <= d.end_date) | (Street.start_date is None))
-                )
-                .all()
-            )
-        ]
-    for successor in form.successors:
-        successor.to_id.choices = street_choices
-
-    form.new_successor_street.choices = [(None, "")] + street_choices
+    # set up street choices
+    street_choices = [
+        (street.id, street.full_name)
+        for street in streets_sorted(d.contemporary_streets())
+    ]
+    form.set_street_choices(street_choices)
 
     if form.validate_on_submit():
         form.populate_obj(d)
 
-        changes = {}
         # remove successor streets marked for deletion
         for to_remove in [x for x in d.successors if x.remove]:
-            d.record_edit(
-                current_user,
-                "removed sucessor {} ({})".format(
-                    to_remove.to_street.full_name, to_remove.to_street.street_id
-                ),
-            )
-            to_remove.to_street.record_edit(
-                current_user,
-                "removed predecessor {} ({})".format(d.full_name, d.street_id),
-            )
-            to_remove.delete()
+            remove_successor(d, to_remove)
 
         #  check for new successor street
         if form.new_successor_street.data is not None:
@@ -238,23 +241,10 @@ def edit_street(tag: str):
                 note=form.new_successor_street_note.data,
             )
             new_successor.save()
-            d.record_edit(
-                current_user,
-                "added successor {} ({})".format(
-                    new_successor.to_street.full_name, new_successor.to_street.street_id
-                ),
-            )
-            new_successor.to_street.record_edit(
-                current_user,
-                "added predecessor {} ({})".format(d.full_name, d.street_id),
-            )
+            add_successor(d, new_successor)
 
-        for attr in inspect(d).attrs:
-            if attr.history.has_changes():
-                changes[attr.key] = attr.history.added
-        if changes:
-            d.record_edit(current_user, str(changes))
-            current_app.logger.info(changes)
+        d.record_changes(current_user)
+
         d.save()
         return redirect(url_for("street.view_street", tag=tag))
     elif form.is_submitted():
