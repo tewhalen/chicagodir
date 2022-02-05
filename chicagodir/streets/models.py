@@ -226,10 +226,12 @@ class Street(PkModel):
         q = db.session.query(Street)
         if self.end_date is not None:
             q.filter(
-                ((Street.start_date <= self.end_date) | (Street.start_date is None))
+                ((Street.start_date <= self.end_date) | (Street.start_date.is_(None)))
             )
         if self.start_date is not None:
-            q.filter(((Street.end_date >= self.start_date) | (Street.end_date is None)))
+            q.filter(
+                ((Street.end_date >= self.start_date) | (Street.end_date.is_(None)))
+            )
         return q.all()
 
     @classmethod

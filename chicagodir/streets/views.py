@@ -62,8 +62,8 @@ def street_listing():
             year = form.year.data
             first_of_year = datetime.date(month=1, day=1, year=year)
             q = q.filter(
-                ((Street.start_date < first_of_year) | (Street.start_date is None))
-                & ((Street.end_date > first_of_year) | (Street.end_date is None))
+                ((Street.start_date < first_of_year) | (Street.start_date.is_(None)))
+                & ((Street.end_date > first_of_year) | (Street.end_date.is_(None)))
             )
             year_str = "as of {}".format(str(year))
 
@@ -83,7 +83,7 @@ def street_listing():
 
     else:
         current_streets = streets_sorted(
-            db.session.query(Street).filter(Street.current is True).all()
+            db.session.query(Street).filter(Street.current.is_(True)).all()
         )
     total_count = len(current_streets)
     street_groups = []
@@ -110,7 +110,7 @@ def missing_start():
     """Show all the known streets."""
     form = StreetSearchForm(request.args)
     current_streets = streets_sorted(
-        db.session.query(Street).filter(Street.start_date is None).all()
+        db.session.query(Street).filter(Street.start_date.is_(None)).all()
     )
     total_count = len(current_streets)
 
@@ -138,7 +138,7 @@ def missing_end():
     form = StreetSearchForm(request.args)
     current_streets = streets_sorted(
         db.session.query(Street)
-        .filter((Street.end_date is None) & (Street.current is not True))
+        .filter((Street.end_date.is_(None)) & (Street.current.is_not(True)))
         .all()
     )
     total_count = len(current_streets)
