@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
-from ast import Str
 
 from flask import (
     Blueprint,
@@ -13,7 +12,6 @@ from flask import (
 )
 from flask_login import login_required, login_user, logout_user
 
-from chicagodir.database import db
 from chicagodir.extensions import login_manager
 from chicagodir.public.forms import LoginForm
 from chicagodir.streets.models import Street
