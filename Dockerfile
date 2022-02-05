@@ -2,7 +2,7 @@
 ARG INSTALL_PYTHON_VERSION=3.9
 ARG INSTALL_NODE_VERSION=16
 
-FROM node:16-buster-slim AS node
+FROM node:17-buster-slim AS node
 FROM python:${INSTALL_PYTHON_VERSION}-slim-buster AS builder
 
 WORKDIR /app
