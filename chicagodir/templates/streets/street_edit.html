@@ -1,4 +1,9 @@
 {% extends "layout.html" %}
+
+{% block page_title %}
+chicagocity.directory / editing {{street.full_name}}
+{% endblock %}
+
 {% macro validated_field(field) -%}
 {% if field.errors %}
 

@@ -22,6 +22,15 @@
           preserved. Please provide any comments/feedback to tew@introvert.net or @tewhalen on twitter</p>
       </div>
     </div>
+
+    <h4>Recently edited streets:</h4>
+    <ul>
+      {% for street_edit in recent_edits %}
+
+      <li> {{street_edit.timestamp.strftime("%b %-d")}} | {{street_edit.street.full_name}}
+      </li>
+      {% endfor %}
+    </ul>
   </div>
 </div><!-- /.jumbotron -->
 

@@ -4,6 +4,16 @@
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
 from chicagodir.streets.models import Street
 
+def int_or_none(x) -> int:
+    """Either convert x to an int or return None."""
+    try:
+        return int(x)
+    except TypeError:
+        return None
+    except ValueError:
+        return None
+
+
 
 def get_all_jobs():
     """Find all the professions in the known directories."""
@@ -21,6 +31,17 @@ class Directory(PkModel):
     name = Column(db.String(80), unique=True, nullable=False)
     year = Column(db.Integer(), nullable=False)
     tag = Column(db.String(15), unique=True, nullable=False)
+
+    streetlist_id = reference_col(
+        "street_lists",
+        nullable=True
+    )
+    street_list = relationship(
+        "StreetList",
+        uselist=False,
+        backref=db.backref("directory", uselist=False),
+        foreign_keys=[streetlist_id],
+    )
 
     def __repr__(self):
         """Represent instance as a unique string."""
@@ -40,6 +61,11 @@ class Directory(PkModel):
         i = 0
         rows = []
         for row in csv_output:
+            # first, make empty strings Nones for DB insert purposes
+            for key, value in row.items():
+                if value == "":
+                    row[key] = None
+
             new_entry = Entry(page_id=new_page.id)
             new_entry.first_name = row["FirstName"]
             new_entry.last_name = row["LastName"]
@@ -47,23 +73,23 @@ class Directory(PkModel):
             new_entry.profession = row["Profession"]
             new_entry.widow = bool(row["Widow"])
             new_entry.home_address = HomeAddress(
-                number=row["HomeAddressNumber"],
+                number=int_or_none(row["HomeAddressNumber"]),
                 street_name_pre_directional=row["HomeAddressStreetNamePreDirectional"],
-                street_name_pre_type=row["HomeAddressStreetNamePreType"],
+                #street_name_pre_type=row["HomeAddressStreetNamePreType"],
                 street_name=row["HomeAddressStreetName"],
                 street_name_post_type=row["HomeAddressStreetNamePostType"],
                 subaddress_type=row["HomeAddressSubaddressType"],
                 subaddress_identifier=row["HomeAddressSubaddressIdentifier"],
-                building_name=row["HomeAddreessBuildingName"],
+                building_name=row["HomeAddressBuildingName"],
                 place_name=row["HomeAddressPlaceName"],
                 dir_entry=new_entry,
             )
             new_entry.home_address.save()
             new_entry.home_address.find_street()
             new_entry.work_address = WorkAddress(
-                number=row["WorkAddressNumber"],
+                number=int_or_none(row["WorkAddressNumber"]),
                 street_name_pre_directional=row["WorkAddressStreetNamePreDirectional"],
-                street_name_pre_type=row["WorkAddressStreetNamePreType"],
+                #street_name_pre_type=row["WorkAddressStreetNamePreType"],
                 street_name=row["WorkAddressStreetName"],
                 street_name_post_type=row["WorkAddressStreetNamePostType"],
                 subaddress_type=row["WorkAddressSubaddressType"],

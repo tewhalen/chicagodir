@@ -12,9 +12,10 @@ from flask import (
 )
 from flask_login import login_required, login_user, logout_user
 
+from chicagodir.database import db
 from chicagodir.extensions import login_manager
 from chicagodir.public.forms import LoginForm
-from chicagodir.streets.models import Street
+from chicagodir.streets.models import Street, StreetEdit
 from chicagodir.user.forms import RegisterForm
 from chicagodir.user.models import User
 from chicagodir.utils import flash_errors
@@ -28,11 +29,21 @@ def load_user(user_id):
     return User.get_by_id(int(user_id))
 
 
+def recent_street_edits():
+    """Query for recently edited streets."""
+    return (
+        db.session.query(StreetEdit)
+        .filter(StreetEdit.timestamp.is_not(None))
+        .order_by(StreetEdit.timestamp.desc())
+        .limit(10)
+        .all()
+    )
+
+
 @blueprint.route("/", methods=["GET", "POST"])
 def home():
     """Home page."""
     form = LoginForm(request.form)
-    current_app.logger.info("Hello from the home page!")
     # Handle logging in
     if request.method == "POST":
         if form.validate_on_submit():
@@ -42,7 +53,9 @@ def home():
             return redirect(redirect_url)
         else:
             flash_errors(form)
-    return render_template("public/home.html", form=form)
+    return render_template(
+        "public/home.html", form=form, recent_edits=recent_street_edits()
+    )
 
 
 @blueprint.route("/logout/")

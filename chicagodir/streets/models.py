@@ -199,13 +199,7 @@ class Street(PkModel):
         if self.current:
             return ""
         else:
-            year = ""
-            if self.end_date:
-                year = self.end_date.year
-            if self.vacated:
-                return "Vacated {}".format(year)
-            else:
-                return "Retired {}".format(year)
+            return self.short_info().capitalize()
 
     def successor_changes(self):
         """Query the sucessor associations."""
@@ -233,6 +227,19 @@ class Street(PkModel):
                 ((Street.end_date >= self.start_date) | (Street.end_date.is_(None)))
             )
         return q.all()
+    
+    @classmethod
+    def streets_given_date(cls, date):
+        q = db.session.query(Street)
+        if date is not None:
+            q.filter(
+                ((Street.start_date <= date) | (Street.start_date.is_(None)))
+            )
+            q.filter(
+                ((Street.end_date >= date) | (Street.end_date.is_(None)))
+            )
+        return q.all()
+
 
     @classmethod
     def find_best_street(cls, name, suffix="", direction="", year=None):
@@ -389,6 +396,9 @@ class StreetList(PkModel):
 
     # other notes
     text = Column(db.Text())
+
+    def new_entry(self, street_id):
+        return StreetListEntry(list_id=self.id, street_id=street_id)
 
 
 class StreetListEntry(PkModel):

@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+
+{% macro validated_field(field) -%}
+{% if field.errors %}
+
+{{ field(class_="form-control is-invalid") }}
+{% for error in field.errors %}
+<div class="invalid-feedback">
+    {{error}}
+</div>
+{% endfor %}
+{% else %}
+{{ field(class_="form-control") }}
+{% endif %}
+
+{%- endmacro %}
+
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/dir/">Directories</a></li>
+          <li class="breadcrumb-item"><a href="{{url_for('dir.view_directory', tag=directory.tag)}}">{{directory.name}} - {{directory.year}}</a></li>
+          <li class="breadcrumb-item active" aria-current="page">street list</li>
+        </ol>
+      </nav>
+    <h2>{{directory.name}} - {{directory.year}}</h2>
+
+        <form method="post">
+            {{ street_list_form.csrf_token }}
+            <h2>Editing {{directory.street_list.name}}</h2>
+            {{directory.street_list.entries}}
+            <div class="row">
+                <div class="col">
+                    <h3>Street List Info</h3>
+                    <table>
+                                 
+                        <tr>
+                            <td><label for="name">Name</label></td>
+                            <td>
+                                {% if street_list_form.name.errors %}
+    
+                                {{ street_list_form.name(class_="form-control is-invalid") }}
+                                {% for error in street_list_form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {{error}}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                {{ street_list_form.name(class_="form-control") }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                       
+                        <tr>
+                            <td><label for="date"></label>Date</label></td>
+    
+                            <td>
+                                {{street_list_form.date(class_="form-control")}}
+    
+                            </td>
+                           
+    
+                        </tr>
+                      
+                        <tr>
+                            <td><label for="url">URL</label>
+    
+                            </td>
+                            <td class="align-top">
+                                {{validated_field(street_list_form.url)}}
+                            </td>
+                        </tr>
+                        
+                    </table>
+                    
+                    <h3>Streets</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Street</th>
+    
+                                <!-- <th>Date of Change</th>
+                                <th>Source</th>-->
+    
+                                <th>Remove?</th>
+    
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for nested in street_list_form.entries %}
+                            <tr>
+                                <td>{{nested.street_id}}</td>
+                                <!--  <td>{{nested.date}}</td>
+                                <td>{{nested.note}}</td> -->
+                                <td>{{nested.remove}}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <th>add a new entry</th>
+                                </tg>
+                            </tr>
+    
+                            <tr>
+                                <td>{{street_list_form.new_entry_street}}</td>
+                                <!----  <td>{{street_list_form.new_successor_street_date}}</td>
+                                <td>{{street_list_form.new_successor_street_note}}</td> -->
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+    
+    
+    
+                {% if street_list_form.errors %}
+                <ul class="errors">
+                    {% for error, value in street_list_form.errors.items() %}
+                    <li>{{ error }} {{value}}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <input class="btn btn-primary" type="submit" value="submit">
+            </div>
+    
+    </div>
+    </form>
+ 
+    
+      
+    
+
+</div>
+{% endblock %}
