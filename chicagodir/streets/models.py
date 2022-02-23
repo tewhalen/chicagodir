@@ -227,19 +227,15 @@ class Street(PkModel):
                 ((Street.end_date >= self.start_date) | (Street.end_date.is_(None)))
             )
         return q.all()
-    
+
     @classmethod
     def streets_given_date(cls, date):
+        """Given a date, find all contemporaneous streets."""
         q = db.session.query(Street)
         if date is not None:
-            q.filter(
-                ((Street.start_date <= date) | (Street.start_date.is_(None)))
-            )
-            q.filter(
-                ((Street.end_date >= date) | (Street.end_date.is_(None)))
-            )
+            q.filter(((Street.start_date <= date) | (Street.start_date.is_(None))))
+            q.filter(((Street.end_date >= date) | (Street.end_date.is_(None))))
         return q.all()
-
 
     @classmethod
     def find_best_street(cls, name, suffix="", direction="", year=None):
@@ -398,6 +394,7 @@ class StreetList(PkModel):
     text = Column(db.Text())
 
     def new_entry(self, street_id):
+        """Add an entry to the streetlist."""
         return StreetListEntry(list_id=self.id, street_id=street_id)
 
 

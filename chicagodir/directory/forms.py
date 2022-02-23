@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Street forms."""
-import datetime
 
 from flask_wtf import FlaskForm
 from wtforms import (
@@ -9,12 +8,10 @@ from wtforms import (
     FieldList,
     Form,
     FormField,
-    IntegerField,
     SelectField,
     StringField,
-    TextAreaField,
 )
-from wtforms.validators import DataRequired, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Length, Optional
 
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
 
