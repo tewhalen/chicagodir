@@ -4,6 +4,7 @@
 import re
 
 from sqlalchemy import inspect
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
@@ -134,6 +135,10 @@ class Street(PkModel):
 
     # other notes
     text = Column(db.Text())
+
+    # text-based tags
+
+    tags = Column(ARRAY(db.String))
 
     # checked by a human and fixed
     confirmed = Column(db.Boolean(), nullable=False, server_default=expression.false())

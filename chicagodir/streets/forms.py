@@ -6,6 +6,7 @@ from flask_wtf import FlaskForm
 from wtforms import (
     BooleanField,
     DateField,
+    Field,
     FieldList,
     Form,
     FormField,
@@ -15,6 +16,7 @@ from wtforms import (
     TextAreaField,
 )
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
+from wtforms.widgets import TextInput
 
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
 
@@ -27,6 +29,26 @@ def int_or_none(x) -> int:
         return None
     except ValueError:
         return None
+
+
+class TagListField(Field):
+    """A List of string tags."""
+
+    widget = TextInput()
+
+    def _value(self):
+        """Process the data."""
+        if self.data:
+            return ", ".join(self.data)
+        else:
+            return ""
+
+    def process_formdata(self, valuelist):
+        """Process form data."""
+        if valuelist:
+            self.data = [x.strip() for x in valuelist[0].split(",")]
+        else:
+            self.data = []
 
 
 year_choices = [(None, "")] + [
@@ -100,6 +122,8 @@ class StreetEditForm(FlaskForm):
     confirmed = BooleanField("Confirmed")
     weird = BooleanField("Weird")
     skip = BooleanField("Skip")
+
+    tags = TagListField("Tags")
 
     new_successor_street_date = DateField("Date of Change", validators=[Optional()])
     new_successor_street_note = StringField("Note", validators=[Optional()])

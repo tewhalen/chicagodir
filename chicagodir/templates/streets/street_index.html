@@ -47,6 +47,23 @@ chicagocity.directory / {{street.full_name}}
     <div class="container px-4 py-5" id="icon-grid">
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-5">
+            {% if street.tags %}
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#bootstrap"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Tags</h4>
+                    <ul class="list-group">
+                        {% for tag in street.tags %}
+                        <ul class="list-group-item list-group-item-primary"><i class="fas fa-tag"></i><a
+                                href="{{ url_for('street.streets_by_tag', tag=tag) }}">{{tag}}</a>
+                        </ul>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
             {% if street.predecessor_changes().count() %}
             <div class="col d-flex align-items-start">
                 <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">

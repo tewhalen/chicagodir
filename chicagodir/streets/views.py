@@ -101,6 +101,33 @@ def street_listing():
 
 
 @blueprint.route(
+    "/street/by_tag/<string:tag>",
+    methods=[
+        "GET",
+    ],
+)
+def streets_by_tag(tag: str):
+    """Show all the known streets."""
+    form = StreetSearchForm(request.args)
+    current_streets = streets_sorted(
+        db.session.query(Street).filter(Street.tags.contains([tag]))
+    )
+    total_count = len(current_streets)
+
+    street_groups = []
+    for i in range(0, len(current_streets), 100):
+        street_groups.append(current_streets[i : i + 100])
+    # street_groups = itertools.zip_longest(current_streets * 100)
+    return render_template(
+        "streets/street_listing.html",
+        current_streets=street_groups,
+        search_form=form,
+        year_str="tagged '{}'".format(tag),
+        total_count=total_count,
+    )
+
+
+@blueprint.route(
     "/street/missing_start/",
     methods=[
         "GET",
