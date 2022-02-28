@@ -6,7 +6,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Service containers to run with `build`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: hello_flask
+          POSTGRES_PASSWORD: hello_flask
+          POSTGRES_DB: chicagodir_dev
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
+      - name: Check out repository code
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -29,3 +48,9 @@ jobs:
         run: pipenv run flask lint --check
       - name: Run Python tests
         run: pipenv run flask test
+        env: 
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: hello_flask
+          POSTGRES_PASSWORD: hello_flask
+          POSTGRES_DB: chicagodir_dev
