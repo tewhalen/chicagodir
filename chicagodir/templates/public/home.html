@@ -27,7 +27,8 @@
     <ul>
       {% for street_edit in recent_edits %}
 
-      <li> {{street_edit.timestamp.strftime("%b %-d")}} | {{street_edit.street.full_name}}
+      <li> {{street_edit.timestamp.strftime("%b %-d")}} | 
+        <a href="{{ url_for('street.view_street', tag=street_edit.street.street_id) }}">{{street_edit.street.full_name}}</a>  ({{street_edit.street.short_info()}})
       </li>
       {% endfor %}
     </ul>
