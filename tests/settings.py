@@ -1,8 +1,13 @@
 """Settings module for test app."""
+import os
+
+POSTGRES_PORT = os.environ['POSTGRES_PORT']
+POSTGRES_HOST = os.environ['POSTGRES_HOST']
+
 ENV = "development"
 TESTING = True
 SQLALCHEMY_DATABASE_URI = (
-    "postgresql://hello_flask:hello_flask@postgres:5432/chicagodir_dev"
+    f"postgresql://hello_flask:hello_flask@{POSTGRES_HOST}:{POSTGRES_PORT}/chicagodir_dev"
 )
 SECRET_KEY = "not-so-secret-in-tests"
 BCRYPT_LOG_ROUNDS = (

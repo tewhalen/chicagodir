@@ -6,12 +6,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     # Service containers to run with `build`
     services:
       # Label used to access the service container
       postgres:
         # Docker Hub image
         image: postgres
+        ports:
+          - 5432/tcp
         # Provide the password for postgres
         env:
           POSTGRES_USER: hello_flask
@@ -48,8 +51,8 @@ jobs:
       - name: Run Python tests
         run: pipenv run flask test
         env: 
-          POSTGRES_HOST: postgres
-          POSTGRES_PORT: 5432
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
           POSTGRES_USER: hello_flask
           POSTGRES_PASSWORD: hello_flask
           POSTGRES_DB: chicagodir_dev
