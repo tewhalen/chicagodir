@@ -133,15 +133,15 @@ chicagocity.directory / {{street.full_name}}
                 </svg>
                 <div>
                     <h4 class="fw-bold mb-0">Edit History</h4>
-                    <ul class=""list-group"> {% for edit in street.edits|reverse %}
-                       <li class="list-group-item small">{% if edit.timestamp %}
-                        {{edit.timestamp.date()}} | <i>{{edit.user.username}}</i> | {{edit.note}}<br>
-                        {% else %}
-                         import | <i>{{edit.user.username}}</i>  | {{edit.note}}<br>
+                    <ul class="" list-group"> {% for edit in street.edits|reverse %}
+                        <li class="list-group-item small">{% if edit.timestamp %}
+                            {{edit.timestamp.date()}} | <i>{{edit.user.username}}</i> | {{edit.note}}<br>
+                            {% else %}
+                            import | <i>{{edit.user.username}}</i> | {{edit.note}}<br>
 
-                         {% endif %}</li> 
+                            {% endif %}</li>
                         {% endfor %}
-                        
+
                     </ul>
                 </div>
             </div>

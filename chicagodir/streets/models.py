@@ -166,9 +166,27 @@ class Street(PkModel):
         )
 
     @property
-    def successors(self) -> "list[Street]":
+    def short_name(self) -> str:
+        """Name without directional prefix."""
+        return " ".join(
+            [
+                street_title_case(self.name),
+                self.suffix.capitalize() or "",
+            ]
+        )
+
+    @property
+    def successor_streets(self) -> "list[Street]":
         """A list of successor streets."""
         return [change.to_street for change in self.successor_changes()]
+
+    def single_successor(self):
+        """If this is succeeded by a single street, return its name and suffix."""
+        names = {successor.short_name for successor in self.successor_streets}
+        if len(names) == 1:
+            return names.pop()
+        else:
+            return None
 
     @property
     def predecessors(self) -> "list[Street]":
@@ -178,16 +196,24 @@ class Street(PkModel):
     def short_info(self) -> str:
         """Short text for after the name of a street to indicate historical status/context."""
         if not self.current:
+            if self.vacated:
+                status = "vacated"
+            else:
+                status = "retired"
+                name = self.single_successor()
+                if name:
+                    status = "→ {}".format(name)
+
             year = ""
             if self.end_date:
                 year = self.end_date.year
                 if self.end_date_circa:
-                    c = "c. "
+                    c = "c."
                 else:
                     c = ""
-                return "retired {}{}".format(c, year)
+                return "{} {}{}".format(status, c, year)
             else:
-                return "retired"
+                return status
         else:
             return "current"
 
@@ -203,8 +229,20 @@ class Street(PkModel):
         """Short bit of info indicating the retired/vacated status of a street."""
         if self.current:
             return ""
+
+        if self.vacated:
+            status = "Vacated"
         else:
-            return self.short_info().capitalize()
+            status = "Retired"
+        if self.end_date:
+            year = self.end_date.year
+            if self.end_date_circa:
+                c = "c."
+            else:
+                c = ""
+            return "{} {}{}".format(status, c, year)
+        else:
+            return status
 
     def successor_changes(self):
         """Query the sucessor associations."""
