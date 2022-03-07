@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     # Service containers to run with `build`
     services:
       # Label used to access the service container
@@ -39,18 +39,18 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Install Python dependencies
         run: |
-          pip install pipenv
-          pipenv install --dev
+          pip install poetry
+          poetry install
       - name: Install Node dependencies
         run: npm install
       - run: cp .env.example .env
       - name: Run Node lints
         run: npm run lint
       - name: Run Python lints
-        run: pipenv run flask lint --check
+        run: poetry run flask lint --check
       - name: Run Python tests
-        run: pipenv run flask test
-        env: 
+        run: poetry run flask test
+        env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
           POSTGRES_USER: hello_flask
