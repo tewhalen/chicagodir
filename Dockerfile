@@ -10,17 +10,49 @@ WORKDIR /app
 COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/lib/ /usr/lib/
 # See https://github.com/moby/moby/issues/37965
-RUN true
+#RUN true
 #RUN apt-get update && apt-get install  -y gcc g++ git
 
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY ["Pipfile", "Pipfile.lock", "shell_scripts/auto_pipenv.sh", "./"]
-RUN python -m pip install --upgrade pip
-RUN pip install --no-cache pipenv
-RUN bash -c 'PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy'
+
+
+# python
+ENV PYTHONUNBUFFERED=1 \
+    # prevents python creating .pyc files
+    PYTHONDONTWRITEBYTECODE=1 \
+    \
+    # pip
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    \
+    # poetry
+    # https://python-poetry.org/docs/configuration/#using-environment-variables
+    # make poetry install to this location
+    POETRY_HOME="/opt/poetry" \
+    # make poetry create the virtual environment in the project's root
+    # it gets named `.venv`
+    POETRY_VIRTUALENVS_CREATE=false \
+    # do not ask any interactive question
+    POETRY_NO_INTERACTION=1 \
+    \
+    # paths
+    # this is where our requirements + virtual environment will live
+    PYSETUP_PATH="/opt/pysetup" \
+    VENV_PATH="/opt/pysetup/.venv"
+
+# prepend poetry and venv to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+
+COPY ["poetry.lock", "pyproject.toml", "install-poetry.py", "./"]
+RUN python3 install-poetry.py
+RUN poetry config virtualenvs.create false
+RUN poetry config virtualenvs.in-project false
+RUN poetry install --no-dev
 
 COPY package.json ./
 RUN npm install
+
 
 COPY webpack.config.js autoapp.py ./
 COPY chicagodir chicagodir
@@ -38,11 +70,6 @@ RUN chown -R sid:sid /app
 USER sid
 ENV PATH="/home/sid/.local/bin:${PATH}"
 
-COPY --from=builder --chown=sid:sid /app/chicagodir/static /app/chicagodir/static
-COPY --from=builder --chown=sid:sid  /app/.venv /app/.venv
-COPY ["Pipfile", "Pipfile.lock", "shell_scripts/auto_pipenv.sh", "./"]
-RUN pip install --no-cache pipenv
-RUN pipenv install --deploy
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d
@@ -56,8 +83,9 @@ CMD ["-c", "/etc/supervisor/supervisord.conf"]
 
 # ================================= DEVELOPMENT ================================
 FROM builder AS development
-RUN rm -rf .venv
-RUN pipenv install --dev
+# install development packages
+RUN poetry install
+
 EXPOSE 2992
 EXPOSE 5000
-CMD [ "pipenv", "run", "npm", "start" ]
+CMD [ "poetry", "run", "npm", "start" ]

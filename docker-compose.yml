@@ -53,7 +53,7 @@ services:
       target: development
       args:
         <<: *build_args
-    entrypoint: pipenv run flask
+    entrypoint: poetry run flask
     depends_on:
       - db
     environment:
