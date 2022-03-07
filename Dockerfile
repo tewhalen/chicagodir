@@ -44,8 +44,8 @@ ENV PYTHONUNBUFFERED=1 \
 # prepend poetry and venv to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-COPY ["poetry.lock", "pyproject.toml", "install-poetry.py", "./"]
-RUN python3 install-poetry.py
+COPY ["poetry.lock", "pyproject.toml", "./"]
+RUN pip install poetry
 RUN poetry config virtualenvs.create false
 RUN poetry config virtualenvs.in-project false
 RUN poetry install --no-dev
