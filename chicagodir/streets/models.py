@@ -90,7 +90,7 @@ class Street(PkModel):
 
     __tablename__ = "streets"
 
-    street_id = Column(db.String(25))
+    street_id = Column(db.String(25), index=True)
     # the full name of the street
     # name = Column(db.String(80), nullable=True)
 
@@ -149,6 +149,8 @@ class Street(PkModel):
     # this is a bad entry, just skip it
     skip = Column(db.Boolean(), nullable=False, server_default=expression.false())
 
+    __table_args__ = (db.Index("idx_streets_name_suff", "name", "suffix"),)
+
     def __repr__(self):
         """Represent instance as a unique string."""
         return f"<Street({self.name})>"
@@ -182,9 +184,19 @@ class Street(PkModel):
 
     def single_successor(self):
         """If this is succeeded by a single street, return its name and suffix."""
-        names = {successor.short_name for successor in self.successor_streets}
-        if len(names) == 1:
-            return names.pop()
+        ## FIX ME this query is slow to run 1000s of times
+        q = (
+            db.session.query(Street.name, Street.suffix)
+            .filter(StreetChange.from_id == self.id)
+            .join(StreetChange, Street.id == StreetChange.to_id)
+            .group_by(Street.name, Street.suffix)
+            .all()
+        )
+
+        if len(q) == 1:
+            return "{} {}".format(
+                street_title_case(q[0].name.title()), q[0].suffix.capitalize()
+            )
         else:
             return None
 
@@ -394,10 +406,10 @@ class StreetChange(PkModel):
 
     note = Column(db.Text(), nullable=True)
 
-    from_id = reference_col("streets")
+    from_id = reference_col("streets", column_kwargs={"index": True})
     from_street = relationship("Street", backref="successors", foreign_keys=[from_id])
 
-    to_id = reference_col("streets", nullable=True)
+    to_id = reference_col("streets", nullable=True, column_kwargs={"index": True})
     to_street = relationship("Street", backref="predecessors", foreign_keys=[to_id])
 
     date = Column(db.Date(), nullable=True)
@@ -409,7 +421,7 @@ class StreetEdit(PkModel):
     __tablename__ = "streets_edits"
 
     # street edited
-    street_id = reference_col("streets")
+    street_id = reference_col("streets", column_kwargs={"index": True})
     street = relationship("Street", backref="edits", foreign_keys=[street_id])
 
     # user who did the edit

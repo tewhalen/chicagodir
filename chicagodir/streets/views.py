@@ -50,6 +50,11 @@ def streets_sorted(streets):
 blueprint = Blueprint("street", __name__, static_folder="../static")
 
 
+@blueprint.route("/streets", methods=["GET"])
+def street_search():
+    """Search database for streets."""
+
+
 @blueprint.route("/street/", methods=["GET", "POST"])
 def street_listing():
     """Show all the known streets."""
@@ -161,7 +166,7 @@ def missing_start():
     ],
 )
 def missing_end():
-    """Show all the known streets."""
+    """Show all the known streets that are not current but have no end date."""
     form = StreetSearchForm(request.args)
     current_streets = streets_sorted(
         db.session.query(Street)
@@ -187,7 +192,7 @@ def missing_end():
 def view_street(tag: str):
     """Let's look at a historical street."""
     try:
-        d = Street.query.filter_by(street_id=tag).first_or_404()
+        d = Street.query.filter_by(street_id=tag).one()
     except NoResultFound:
         abort(404)
     except MultipleResultsFound:

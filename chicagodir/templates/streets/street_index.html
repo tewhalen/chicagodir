@@ -1,5 +1,11 @@
 {% extends "layout.html" %}
 
+{% block css %}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{street.full_name}} on chicagocity.directory">
+<meta name="twitter:description" content="{{street.historical_note}}">
+{% endblock %}
+
 {% block page_title %}
 chicagocity.directory / {{street.full_name}}
 {% endblock %}
@@ -61,6 +67,18 @@ chicagocity.directory / {{street.full_name}}
                         </ul>
                         {% endfor %}
                     </ul>
+                </div>
+            </div>
+            {% endif %}
+            {% if street.current %}
+            <div class="col d-flex align-items-start">
+                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
+                    <use xlink:href="#bootstrap"></use>
+                </svg>
+                <div>
+                    <h4 class="fw-bold mb-0">Location</h4>
+                    <img width="250px"
+                        src="https://chicitydir.us-east-1.linodeobjects.com/streets/maps/{{street.street_id}}.png">
                 </div>
             </div>
             {% endif %}
