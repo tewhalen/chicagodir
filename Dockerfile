@@ -94,6 +94,9 @@ ENV PYTHONUNBUFFERED=1 \
 
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:/home/sid/.local/bin/:$PATH"
 
+COPY --from=builder --chown=sid:sid /app/chicagodir/static /app/chicagodir/static
+COPY --from=builder --chown=sid:sid  /opt/poetry /opt/poetry
+COPY --from=builder --chown=sid:sid  /opt/pysetup /opt/pysetup
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d
