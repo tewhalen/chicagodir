@@ -7,5 +7,5 @@ function auto_pipenv_shell {
     if [ -f "poetry.lock" ] ; then
         source "$(poetry env info -p)/bin/activate"
     fi
-}
+
 }
