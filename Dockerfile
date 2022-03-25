@@ -73,7 +73,7 @@ USER sid
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:/home/sid/.local/bin/:$PATH"
 RUN pip install poetry 
 
-RUN poetry install --no-dev
+
 
 COPY --from=builder --chown=sid:sid /app/chicagodir/static /app/chicagodir/static
 
@@ -82,7 +82,7 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d
 
 COPY . .
-
+RUN poetry install --no-dev
 EXPOSE 5000
 ENTRYPOINT ["/bin/bash", "shell_scripts/supervisord_entrypoint.sh"]
 CMD ["-c", "/etc/supervisor/supervisord.conf"]
