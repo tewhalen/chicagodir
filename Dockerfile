@@ -68,6 +68,7 @@ WORKDIR /app
 RUN useradd -m sid
 RUN chown -R sid:sid /app
 USER sid
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 ENV PATH="/home/sid/.local/bin:${PATH}"
 
 
