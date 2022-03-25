@@ -93,10 +93,11 @@ ENV PYTHONUNBUFFERED=1 \
     VENV_PATH="/opt/pysetup/.venv"
 
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:/home/sid/.local/bin/:$PATH"
+RUN pip install poetry 
 
 COPY --from=builder --chown=sid:sid /app/chicagodir/static /app/chicagodir/static
-COPY --from=builder --chown=sid:sid  /opt/poetry /opt/poetry
-COPY --from=builder --chown=sid:sid  /opt/pysetup /opt/pysetup
+COPY --from=builder --chown=sid:sid /opt/pysetup /opt/pysetup
+#COPY --from=builder --chown=sid:sid /opt/poetry /opt/poetry
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d
