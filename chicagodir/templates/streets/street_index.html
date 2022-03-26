@@ -15,51 +15,34 @@ chicagocity.directory / {{street.full_name}}
 
 
 <div class="container">
-    <div class="row">
-        <div class="card border border-secondary" style="width: 23rem;">
-            <div class="card-body">
-                {% if street.current %}
 
-                <div class="card-title text-center bg-primary border border-secondary text-white">
-                    Current Street<br />
-                    <h2>{{street.full_name}} </h2>
-                </div>
-                {% else %}
-                <div class="card-title text-center bg-secondary border border-secondary text-white">
-                    {{street.retirement_info() }}<br />
-                    <h2>
-                        {{street.full_name}} </h2>
-                </div>
-                {% endif %}
-                <h4 class="card-subtitle">{{street.grid_location}}{{street.grid_direction}} | from
-                    {{street.min_address}}
-                    to
-                    {{street.max_address}}
-                </h4>
-                {% if current_user and current_user.is_authenticated %}
-                <a class="btn btn-primary" href="edit">edit</a>
-                {% else %}
-                <a href="{{url_for('public.register')}}">[create an account to edit]</a>
-                {% endif %}
-                <div>{{street.historical_note}}</div>
-                <!-- <div>dates: {{street.start_date}}
-                {{street.end_date}}
-            </div> -->
+    {% if street.current %}
 
-            </div>
-        </div>
+    <h3>Current Street</h3>
+    <h1 class="display-4">{{street.full_name}} </h1>
 
-    </div>
+    {% else %}
+    <h3>{{street.retirement_info() }}</h3>
+    <h1 class="display-4">
+        {{street.full_name}} </h1>
+
+    {% endif %}
+    <h4>{{street.grid_location}}{{street.grid_direction}} | from
+        {{street.min_address}}
+        to
+        {{street.max_address}}
+    </h4>
+    <div>{{street.historical_note}}</div>
+
     <div class="container px-4 py-5" id="icon-grid">
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-5">
+
             {% if street.tags %}
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#bootstrap"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Tags</h4>
+            <div class="card d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0">Tags</h4>
                     <ul class="list-group">
                         {% for tag in street.tags %}
                         <ul class="list-group-item list-group-item-primary"><i class="fas fa-tag"></i><a
@@ -70,26 +53,20 @@ chicagocity.directory / {{street.full_name}}
                 </div>
             </div>
             {% endif %}
-            {% if street.current %}
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#bootstrap"></use>
-                </svg>
+            <div class="card d-flex align-items-start">
                 <div>
-                    <h4 class="fw-bold mb-0">Location</h4>
+                    <h4 class="card-title fw-bold mb-0"> <i class="fas fa-map-marked"></i>
+                        Location</h4>
                     <img width="250px"
                         src="https://chicitydir.us-east-1.linodeobjects.com/streets/maps/{{street.street_id}}.png">
                 </div>
             </div>
-            {% endif %}
             {% if street.predecessor_changes().count() %}
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#bootstrap"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Predecessors</h4>
-                    <ul class="list-group">
+            <div class="card d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"><i class="fas fa-arrow-alt-circle-left"></i> Predecessors</h4>
+                    <ul class="list-group list-group-flush">
                         {% for page in street.predecessor_changes() %}
                         <ul class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=page.from_street.street_id) }}">{{page.from_street.full_name}}</a>
@@ -101,13 +78,11 @@ chicagocity.directory / {{street.full_name}}
             </div>
             {% endif %}
             {% if street.successor_changes().count() %}
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#cpu-fill"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Successors</h4>
-                    <ul class="list-group">
+            <div class="card  d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"><i class="fas fa-arrow-alt-circle-right"></i> Successors</h4>
+                    <ul class="list-group list-group-flush">
                         {% for page in street.successor_changes() %}
                         <li class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=page.to_street.street_id) }}">{{page.to_street.full_name}}</a>
@@ -118,14 +93,32 @@ chicagocity.directory / {{street.full_name}}
                 </div>
             </div>
             {% endif %}
+
+            <div class="card d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"><i class="fas fa-clipboard-check"></i> Data Issues</h4>
+                    <ul class="list-group list-group-flush"> {% for issue in street.data_issues() %}
+                        <li class="list-group-item list-group-item-{{issue.level}}"><i class="{{issue.icon}}"></i>
+                            {{issue.issue}}</li> {% endfor %}
+                    </ul>
+                    {% if current_user and current_user.is_authenticated %}
+                    <a class="btn btn-primary" href="edit">edit</a>
+                    {% else %}
+                    <a class="btn btn-primary" href="{{url_for('public.register')}}">create an account to edit</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-5">
+
             {% if street.similar_streets().count() %}
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#calendar3"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Similarly named streets</h4>
-                    <ul class="list-group">
+            <div class="card d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"> <i class="fas fa-eye"></i> Similarly named streets</h4>
+                    <ul class="list-group list-group-flush">
                         {% for similar_street in street.similar_streets() %}
                         <li class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=similar_street.street_id) }}">{{similar_street.full_name}}</a>
@@ -136,22 +129,18 @@ chicagocity.directory / {{street.full_name}}
                 </div>
             </div>
             {% endif %}
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#home"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Source Notes</h4>
+            <div class="card d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"><i class="fas fa-book-reader"></i> Source Notes</h4>
                     <p>{{source_notes|safe}}</p>
                 </div>
             </div>
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#speedometer2"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Edit History</h4>
-                    <ul class="" list-group"> {% for edit in street.edits|reverse %}
+            <div class="card d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"><i class="fas fa-history"></i> Edit History</h4>
+                    <ul class="list-group list-group-flush"> {% for edit in street.edits|reverse %}
                         <li class="list-group-item small">{% if edit.timestamp %}
                             {{edit.timestamp.date()}} | <i>{{edit.user.username}}</i> | {{edit.note}}<br>
                             {% else %}
@@ -163,23 +152,7 @@ chicagocity.directory / {{street.full_name}}
                     </ul>
                 </div>
             </div>
-            <div class="col d-flex align-items-start">
-                <svg class="bi text-muted flex-shrink-0 me-3" width="1.75em" height="1.75em">
-                    <use xlink:href="#speedometer2"></use>
-                </svg>
-                <div>
-                    <h4 class="fw-bold mb-0">Data Issues</h4>
-                    <ul class="list-group"> {% for issue in street.data_issues() %}
-                        <li class="list-group-item list-group-item-{{issue.level}}"><i class="{{issue.icon}}"></i>
-                            {{issue.issue}}</li> {% endfor %}
-                    </ul>
-                    {% if current_user and current_user.is_authenticated %}
-                    <a class="btn btn-primary" href="edit">edit</a>
-                    {% else %}
-                    <a class="btn btn-primary" href="{{url_for('public.register')}}">create an account to edit</a>
-                    {% endif %}
-                </div>
-            </div>
+
 
         </div>
     </div>
