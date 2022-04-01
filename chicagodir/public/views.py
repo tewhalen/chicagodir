@@ -23,13 +23,17 @@ def load_user(user_id):
 
 def recent_street_edits():
     """Query for recently edited streets."""
-    return (
-        db.session.query(StreetEdit)
+    subq = (
+        db.select(
+            StreetEdit.street_id, db.func.max(StreetEdit.timestamp).label("timestamp")
+        )
+        .group_by(StreetEdit.street_id)
         .filter(StreetEdit.timestamp.is_not(None))
-        .order_by(StreetEdit.timestamp.desc())
+        .order_by(db.desc("timestamp"))
         .limit(10)
-        .all()
     )
+    print(subq)
+    return db.session.query(Street).join(subq).all()
 
 
 @blueprint.route("/", methods=["GET", "POST"])

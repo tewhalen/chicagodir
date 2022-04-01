@@ -6,6 +6,7 @@ import re
 from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
+import datetime
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
 
@@ -177,6 +178,19 @@ class Street(PkModel):
             ]
         )
 
+    def find_current_successors(self, n=0):
+        """Follow the chain of street changes all the way to the end."""
+        if n > 5:
+            # don't recurse more than 5 times
+            return set()
+        elif self.current:
+            return {street}
+        else:
+            found = set()
+            for street in street.successor_streets:
+                found = found.union(street.find_current_successors(n + 1))
+            return found
+
     @property
     def successor_streets(self) -> "list[Street]":
         """A list of successor streets."""
@@ -184,7 +198,7 @@ class Street(PkModel):
 
     def single_successor(self):
         """If this is succeeded by a single street, return its name and suffix."""
-        ## FIX ME this query is slow to run 1000s of times
+        # FIX ME this query is slow to run 1000s of times
         q = (
             db.session.query(Street.name, Street.suffix)
             .filter(StreetChange.from_id == self.id)
@@ -395,6 +409,17 @@ class Street(PkModel):
                 changes[attr.key] = attr.history.added
         if changes:
             self.record_edit(current_user, str(changes))
+
+    @property
+    def timestamp(self):
+        q = db.select(db.func.max(StreetEdit.timestamp).label("timestamp")).filter(
+            StreetEdit.street_id == self.id
+        )
+        row = db.session.execute(q).one()
+        if row:
+            return row["timestamp"]
+        else:
+            return datetime.datetime.now()
 
 
 class StreetChange(PkModel):
