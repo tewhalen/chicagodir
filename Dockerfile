@@ -40,7 +40,7 @@ RUN npm install
 COPY --chown=sid:sid webpack.config.js autoapp.py ./
 COPY --chown=sid:sid chicagodir chicagodir
 COPY --chown=sid:sid assets assets
-COPY .env.example .env
+#COPY .env.example .env
 RUN poetry run npm run-script build
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf

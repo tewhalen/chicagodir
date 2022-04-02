@@ -29,7 +29,7 @@ services:
       - worker-dev
     environment:
       DATABASE_URL: postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: ${REDIS_URL}
     <<: *default_volumes
 
   manage:
@@ -75,7 +75,9 @@ services:
     command: flask run_worker
     environment:
       DATABASE_URL: postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: ${REDIS_URL}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
     <<: *default_volumes
 
 volumes:
