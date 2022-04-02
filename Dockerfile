@@ -57,4 +57,4 @@ RUN curl "https://chicitydir.us-east-1.linodeobjects.com/GIS/comm_areas.tgz" | \
 
 EXPOSE 5000
 ENTRYPOINT ["/usr/bin/env", "poetry", "run"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
