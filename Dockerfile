@@ -41,6 +41,7 @@ COPY --chown=sid:sid webpack.config.js autoapp.py ./
 COPY --chown=sid:sid chicagodir chicagodir
 COPY --chown=sid:sid assets assets
 #COPY .env.example .env
+ENV FLASK_APP autoapp.py
 RUN poetry run npm run-script build
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
