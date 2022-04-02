@@ -16,7 +16,7 @@ DEBUG = ENV == "development"
 SQLALCHEMY_DATABASE_URI = env.str(
     "DATABASE_URL", default="sqlite:////tmp/dev.db"
 ).replace("postgres://", "postgresql://")
-SECRET_KEY = env.str("SECRET_KEY")
+SECRET_KEY = env.str("SECRET_KEY", default="not-so-secret")
 SEND_FILE_MAX_AGE_DEFAULT = env.int("SEND_FILE_MAX_AGE_DEFAULT", default=0)
 BCRYPT_LOG_ROUNDS = env.int("BCRYPT_LOG_ROUNDS", default=13)
 DEBUG_TB_ENABLED = DEBUG
