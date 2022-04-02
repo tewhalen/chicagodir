@@ -46,7 +46,7 @@ RUN poetry run npm run-script build
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d
-
+COPY Procfile Procfile
 #COPY . .
 
 RUN mkdir -p chicagodir/streets/data
