@@ -17,7 +17,7 @@ TEST_PATH = os.path.join(PROJECT_ROOT, "tests")
 env = Env()
 env.read_env()
 
-REDIS_URL = env.str("REDIS_URL")
+REDIS_URL = env.str("REDIS_URL", default="redis://redis:6379/0")
 QUEUES = ["default"]
 
 

@@ -25,5 +25,5 @@ CACHE_TYPE = "simple"  # Can be "memcached", "redis", etc.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # redis stuff
-REDIS_URL = env.str("REDIS_URL")
+REDIS_URL = env.str("REDIS_URL", default="redis://redis:6379/0")
 QUEUES = ["default"]
