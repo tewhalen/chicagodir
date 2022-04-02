@@ -57,3 +57,4 @@ env/
 # Development database
 *.db
 .DS_Store
+.env.example
