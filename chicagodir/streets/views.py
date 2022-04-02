@@ -4,6 +4,7 @@ import datetime
 import re
 
 import markdown
+import redis
 from flask import (
     Blueprint,
     abort,
@@ -14,12 +15,14 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from rq import Connection, Queue
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from chicagodir.database import db
 from chicagodir.streets.models import Street, StreetChange
 
 from .forms import StreetEditForm, StreetSearchForm
+from .tasks import redraw_map_for_street, refresh_community_area_tags
 
 
 def atoi(text):
@@ -278,6 +281,12 @@ def edit_street(tag: str):
         d.record_changes(current_user)
 
         d.save()
+
+        with Connection(redis.from_url(current_app.config["REDIS_URL"])):
+            q = Queue()
+            q.enqueue(refresh_community_area_tags, d.street_id)
+            q.enqueue(redraw_map_for_street, d.street_id)
+
         return redirect(url_for("street.view_street", tag=tag))
     elif form.is_submitted():
         current_app.logger.warning("submitted but invalid")

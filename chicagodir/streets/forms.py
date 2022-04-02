@@ -46,7 +46,7 @@ class TagListField(Field):
     def process_formdata(self, valuelist):
         """Process form data."""
         if valuelist:
-            self.data = [x.strip() for x in valuelist[0].split(",") if x.strip()]
+            self.data = list({x.strip() for x in valuelist[0].split(",") if x.strip()})
         else:
             self.data = []
 

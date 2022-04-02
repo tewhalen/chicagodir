@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Street models."""
 
+import datetime
 import re
 
 from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
-import datetime
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
 
@@ -184,10 +184,10 @@ class Street(PkModel):
             # don't recurse more than 5 times
             return set()
         elif self.current:
-            return {street}
+            return {self}
         else:
             found = set()
-            for street in street.successor_streets:
+            for street in self.successor_streets:
                 found = found.union(street.find_current_successors(n + 1))
             return found
 
@@ -412,6 +412,7 @@ class Street(PkModel):
 
     @property
     def timestamp(self):
+        """Return the timestamp of latest edit to this street."""
         q = db.select(db.func.max(StreetEdit.timestamp).label("timestamp")).filter(
             StreetEdit.street_id == self.id
         )

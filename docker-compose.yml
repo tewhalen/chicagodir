@@ -16,41 +16,26 @@ services:
   flask-dev:
     build:
       context: .
-      target: development
+      target: execution
       args:
         <<: *build_args
     image: "chicagodir-development"
+    command: npm start
     ports:
       - "8080:5000"
-      - "2992:2992"
     depends_on:
       - db
+      - redis
+      - worker-dev
     environment:
-      - DATABASE_URL=postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
-    <<: *default_volumes
-
-  flask-prod:
-    build:
-      context: .
-      target: production
-      args:
-        <<: *build_args
-    image: "chicagodir-production"
-    ports:
-      - "8080:5000"
-    environment:
-      FLASK_ENV: production
-      FLASK_DEBUG: 0
-      LOG_LEVEL: info
-      GUNICORN_WORKERS: 4
       DATABASE_URL: postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
-
+      REDIS_URL: redis://redis:6379/0
     <<: *default_volumes
 
   manage:
     build:
       context: .
-      target: development
+      target: execution
       args:
         <<: *build_args
     entrypoint: poetry run flask
@@ -73,6 +58,26 @@ services:
       - POSTGRES_USER=hello_flask
       - POSTGRES_PASSWORD=hello_flask
       - POSTGRES_DB=chicagodir_dev
+
+  redis:
+    image: redis:6.2-alpine
+
+  worker-dev:
+    build:
+      context: .
+      target: execution
+      args:
+        <<: *build_args
+    image: "chicagodir-worker"
+    depends_on:
+      - db
+      - redis
+    command: flask run_worker
+    environment:
+      DATABASE_URL: postgresql://hello_flask:hello_flask@db:5432/chicagodir_dev
+      REDIS_URL: redis://redis:6379/0
+    <<: *default_volumes
+
 volumes:
   node-modules:
   postgres_data:

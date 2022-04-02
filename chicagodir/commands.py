@@ -5,10 +5,20 @@ from glob import glob
 from subprocess import call
 
 import click
+import redis
+from environs import Env
+from rq import Connection, Worker
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, os.pardir)
 TEST_PATH = os.path.join(PROJECT_ROOT, "tests")
+
+
+env = Env()
+env.read_env()
+
+REDIS_URL = env.str("REDIS_URL")
+QUEUES = ["default"]
 
 
 @click.command()
@@ -63,3 +73,21 @@ def lint(fix_imports, check):
         execute_tool("Fixing import order", "isort", *isort_args)
     execute_tool("Formatting style", "black", *black_args)
     execute_tool("Checking code style", "flake8")
+
+
+@click.command("run_worker")
+def run_worker():
+    """Run the redis worker."""
+    # redis stuff
+
+    redis_connection = redis.from_url(REDIS_URL)
+
+    # import this, because it's slow to import
+    from chicagodir.app import create_app
+
+    app = create_app()
+    app.app_context().push()
+
+    with Connection(redis_connection):
+        worker = Worker(QUEUES)
+        worker.work()
