@@ -24,8 +24,8 @@ def clip_by_address(data, direction, min_address, max_address):
     max_address_v = gridmaker.predict(direction, int(max_address))
 
     if direction in ("N", "S"):
-        s_min = data["geometry"].bounds["minx"].min()
-        s_max = data["geometry"].bounds["maxx"].max()
+        s_min = data["geom"].bounds["minx"].min()
+        s_max = data["geom"].bounds["maxx"].max()
 
         return Polygon(
             [
@@ -36,8 +36,8 @@ def clip_by_address(data, direction, min_address, max_address):
             ]
         )
     else:
-        s_min = data["geometry"].bounds["miny"].min()
-        s_max = data["geometry"].bounds["maxy"].max()
+        s_min = data["geom"].bounds["miny"].min()
+        s_max = data["geom"].bounds["maxy"].max()
 
         return Polygon(
             [
