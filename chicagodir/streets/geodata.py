@@ -3,7 +3,7 @@
 import os
 
 import geopandas as gpd
-import pandas as pd
+from chicagodir.database import db
 from shapely.geometry import Polygon
 
 from .grid_interpolate import Grid
@@ -78,22 +78,16 @@ class RoadCache(GPDCache):
 
 
 load_areas = GPDCache(areas_fp)
-load_roads = RoadCache(roads_fp)
+# load_roads = RoadCache(roads_fp)
 
 
 def find_road_geom(streets):
     """Given a list of streets, return a geopandas DF with relevant info."""
-    roads = load_roads()
-    return pd.concat(
-        [
-            roads[
-                (roads["PRE_DIR"] == street.direction)
-                & (roads["STREET_NAM"] == street.name)
-                & (roads["STREET_TYP"] == street.suffix)
-            ]
-            for street in streets
-        ]
-    )
+    street_ids = tuple(x.street_id for x in streets)
+    sql = "SELECT street_id, geom from street_lines where street_id in %(streets)s"
+
+    with db.get_engine().connect() as connection:
+        return gpd.read_postgis(sql, connection, params={"streets": street_ids})
 
 
 def active_community_areas(geom):

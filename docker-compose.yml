@@ -51,7 +51,7 @@ services:
     <<: *default_volumes
 
   db:
-    image: postgres:14.1-alpine
+    image: postgis/postgis:14-3.2
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:

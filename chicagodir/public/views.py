@@ -32,7 +32,6 @@ def recent_street_edits():
         .order_by(db.desc("timestamp"))
         .limit(10)
     )
-    print(subq)
     return db.session.query(Street).join(subq).all()
 
 
