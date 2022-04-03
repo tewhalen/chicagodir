@@ -50,8 +50,6 @@ COPY Procfile Procfile
 COPY migrations migrations
 
 RUN mkdir -p chicagodir/streets/data
-RUN curl "https://chicitydir.us-east-1.linodeobjects.com/GIS/streets.tgz" | \
-    tar xvz -C chicagodir/streets/data
 RUN curl "https://chicitydir.us-east-1.linodeobjects.com/GIS/comm_areas.tgz" | \
     tar xvz -C chicagodir/streets/data
 

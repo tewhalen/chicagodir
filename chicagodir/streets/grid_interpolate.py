@@ -1,35 +1,20 @@
 """Handle mapping of grip addresses to coordinates."""
 
-import os
-
-import pandas as pd  # To read data
-from sklearn.linear_model import LinearRegression
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-
 
 class Grid:
-    """Load in the grid info, build a regression model, and use it to calculate location based on address."""
+    """Using regression model, calculate location based on address."""
 
-    def __init__(self):
-        """Read in average grid locations and build model."""
-        data = pd.read_csv(HERE + "/data/grid_locations.csv")  # load data set
-        self.predictors = dict()
-        for d in ("N", "W", "E", "S"):
-            direction = data[data["direction"] == d]
-            x = direction["grid"].values.reshape(
-                -1, 1
-            )  # values converts it into a numpy array
-            y = direction["value"].values.reshape(
-                -1, 1
-            )  # -1 means that calculate the dimension of rows, but have 1 column
-            linear_regressor = LinearRegression()  # create object for the class
-            linear_regressor.fit(x, y)  # perform linear regression
-            self.predictors[d] = linear_regressor
+    lines = {
+        "N": (6.56106944, 1900205.24500993),
+        "W": (-6.80865418, 1176786.98556475),
+        "E": (6.79533698, 1177450.57112369),
+        "S": (-6.42085299, 1902839.08039695),
+    }
 
     def predict(self, direction, address):
         """Given a street address, determine relevant coordinate."""
-        return self.predictors[direction].predict([[address]])[0][0]
+        slope, intercept = self.lines[direction]
+        return slope * address + intercept
 
 
 if __name__ == "__main__":

@@ -42,7 +42,6 @@ pandas = "^1.4.1"
 Pillow = "^9.0.1"
 numpy = "^1.22.3"
 Rtree = "^0.9.7"
-scikit-learn = "^1.0.2"
 boto3 = "^1.21.32"
 
 

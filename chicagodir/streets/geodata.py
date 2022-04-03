@@ -3,8 +3,9 @@
 import os
 
 import geopandas as gpd
-from chicagodir.database import db
 from shapely.geometry import Polygon
+
+from chicagodir.database import db
 
 from .grid_interpolate import Grid
 
