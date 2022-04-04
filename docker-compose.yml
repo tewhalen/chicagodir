@@ -16,7 +16,8 @@ services:
   flask-dev:
     build:
       context: .
-      target: execution
+      dockerfile: Dockerfile.dev
+      target: devel
       args:
         <<: *build_args
     image: "chicagodir-development"
@@ -35,7 +36,8 @@ services:
   manage:
     build:
       context: .
-      target: execution
+      dockerfile: Dockerfile.dev
+      target: devel
       args:
         <<: *build_args
     entrypoint: poetry run flask
@@ -65,7 +67,8 @@ services:
   worker-dev:
     build:
       context: .
-      target: execution
+      dockerfile: Dockerfile.dev
+      target: devel
       args:
         <<: *build_args
     image: "chicagodir-worker"

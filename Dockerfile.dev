@@ -47,15 +47,14 @@ COPY --chown=sid:sid assets assets
 ENV FLASK_APP autoapp.py
 RUN poetry run npm run-script build
 
-# ================================== PRODUCTION ===================================
-
-FROM poetry_base AS production
-# copy the results of the build
-COPY --from=builder /app/chicagodir/static /app/chicagodir/static
-
+# ================================== DEVEL ===================================
+FROM builder as devel
 USER root
 RUN apt-get update && apt-get install  -y imagemagick optipng curl
 USER sid
+
+# Install the python development stuff
+RUN poetry install
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d
