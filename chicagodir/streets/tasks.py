@@ -17,6 +17,8 @@ from chicagodir.streets.geodata import (
 )
 from chicagodir.streets.models import Street
 
+# from chicagodir.database import db
+
 env = Env()
 env.read_env()
 
@@ -37,12 +39,18 @@ def find_final_extent(street: Street):
                 street.max_address,
             )
             return street_data.clip(clipping_area)
+        else:
+            # don't tag.
+            return None
 
 
 def refresh_community_area_tags(street_id: str):
     """Given a street that has just been edited, recalcuate which CAs it passes through."""
     d = Street.query.filter_by(street_id=street_id).one()
     geom = find_final_extent(d)
+    if geom is None:
+        print("Warning: not able to CA tag {}".format(street_id))
+        return
     community_areas = find_community_areas(geom)
     tags = set(d.tags)
     ca_tags_to_add = {"CA{}-{}".format(n, name) for n, name in community_areas}
@@ -51,6 +59,19 @@ def refresh_community_area_tags(street_id: str):
     tags = tags.difference(ca_tags_to_remove)
 
     d.tags = list(tags)
+    d.save()
+
+
+def calc_successor_info(street_id: str):
+    """Given a street that has just been edited, recalcuate which CAs it passes through."""
+    # for street in Street.query.all():
+    #    if street.successor_name is None:
+    #        street.calculate_single_successor()
+    # db.session.commit()
+
+    d = Street.query.filter_by(street_id=street_id).one()
+
+    d.calculate_single_successor()
     d.save()
 
 
@@ -67,6 +88,8 @@ def redraw_map_for_street(street_id: str):
     if street.current:
         street_data = find_road_geom([street])
         # highlight where this street runs
+        if street_data is None:
+            print("Warning: no street data for {}".format(street_id))
         active_cas = active_community_areas(street_data)
         active_cas.plot(ax=my_map, color="pink")
     else:
@@ -76,7 +99,8 @@ def redraw_map_for_street(street_id: str):
         if current_streets:
 
             street_data = find_road_geom(current_streets)
-
+            if street_data is None:
+                print("Warning: no street data for {}".format(street_id))
             # if there's just one final street:
             if len(current_streets) == 1:
                 final = current_streets.pop()

@@ -70,7 +70,7 @@ chicagocity.directory / {{street.full_name}}
                         {% for page in street.predecessor_changes() %}
                         <ul class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=page.from_street.street_id) }}">{{page.from_street.full_name}}</a>
-                            ({{page.from_street.short_info()}})
+                            {{page.from_street.short_tag()}}
                         </ul>
                         {% endfor %}
                     </ul>
@@ -86,7 +86,7 @@ chicagocity.directory / {{street.full_name}}
                         {% for page in street.successor_changes() %}
                         <li class="list-group-item"><a
                                 href="{{ url_for('street.view_street', tag=page.to_street.street_id) }}">{{page.to_street.full_name}}</a>
-                            {{page.to_street.short_info()}}
+                            {{page.to_street.short_tag()}}
                         </li>
                         {% endfor %}
                     </ul>

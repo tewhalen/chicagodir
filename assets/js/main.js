@@ -7,6 +7,7 @@
 // JavaScript modules
 require('@fortawesome/fontawesome-free');
 require('jquery');
+require("jquery-ui/ui/widgets/autocomplete");
 require('bootstrap');
 
 require.context(

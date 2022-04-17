@@ -69,6 +69,7 @@ class StreetSearchForm(Form):
         # default=datetime.date.today().year,
     )
     confirmed = BooleanField("Confirmed")
+    term = StringField("Query", validators=[Optional(), Length(max=40)])
 
 
 class ChangeForm(Form):

@@ -20,7 +20,7 @@ textarea {
   resize: vertical;
 }
 
-.container-narrow{
+.container-narrow {
   margin: 0 auto;
   max-width: 700px;
 }
@@ -43,8 +43,8 @@ textarea {
   height: auto;
   padding: 10px;
   -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 /* footer */
@@ -83,4 +83,33 @@ footer .footer-nav {
   float: right;
   margin-right: 25px;
   list-style: none;
+}
+
+.ui-autocomplete {
+  position: absolute;
+  z-index: 1000;
+  cursor: default;
+  padding: 0;
+  margin-top: 2px;
+  list-style: none;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.ui-autocomplete>li {
+  padding: 3px 20px;
+}
+
+.ui-autocomplete>li.ui-state-focus {
+  background-color: #DDD;
+}
+
+.ui-helper-hidden-accessible {
+  display: none;
 }

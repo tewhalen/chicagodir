@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
+from chicagodir.streets.sorting import street_key
 
 post_type_map = {
     "AY": "AVE",
@@ -150,6 +151,8 @@ class Street(PkModel):
     # this is a bad entry, just skip it
     skip = Column(db.Boolean(), nullable=False, server_default=expression.false())
 
+    successor_name = Column(db.String(80), nullable=True)
+
     __table_args__ = (db.Index("idx_streets_name_suff", "name", "suffix"),)
 
     def __repr__(self):
@@ -166,7 +169,7 @@ class Street(PkModel):
                 self.suffix.capitalize() or "",
                 self.suffix_direction or "",
             ]
-        )
+        ).strip()
 
     @property
     def short_name(self) -> str:
@@ -196,7 +199,7 @@ class Street(PkModel):
         """A list of successor streets."""
         return [change.to_street for change in self.successor_changes()]
 
-    def single_successor(self):
+    def calculate_single_successor(self):
         """If this is succeeded by a single street, return its name and suffix."""
         # FIX ME this query is slow to run 1000s of times
         q = (
@@ -208,16 +211,23 @@ class Street(PkModel):
         )
 
         if len(q) == 1:
-            return "{} {}".format(
+            self.successor_name = "{} {}".format(
                 street_title_case(q[0].name.title()), q[0].suffix.capitalize()
             )
-        else:
-            return None
 
     @property
     def predecessors(self) -> "list[Street]":
         """A list of predecessor streets."""
         return [change.from_street for change in self.predecessor_changes()]
+
+    def grid_info(self) -> str:
+        """Return short text indicating grid position."""
+        if self.diagonal:
+            return "diag"
+        elif self.grid_direction and self.grid_location:
+            return "{}{}".format(self.grid_location, self.grid_direction)
+        else:
+            return ""
 
     def short_info(self) -> str:
         """Short text for after the name of a street to indicate historical status/context."""
@@ -226,22 +236,33 @@ class Street(PkModel):
                 status = "vacated"
             else:
                 status = "retired"
-                name = self.single_successor()
-                if name:
-                    status = "→ {}".format(name)
+                if self.successor_name:
+                    status = "→ {}".format(self.successor_name)
 
-            year = ""
-            if self.end_date:
-                year = self.end_date.year
-                if self.end_date_circa:
-                    c = "c."
-                else:
-                    c = ""
-                return "{} {}{}".format(status, c, year)
+            end_date_info = self.end_date_info()
+            if end_date_info:
+                return "{} {}".format(status, end_date_info)
             else:
                 return status
         else:
             return "current"
+
+    def end_date_info(self) -> str:
+        """Return some info about the end date of the street."""
+        if self.end_date:
+            year = self.end_date.year
+            if self.end_date_circa:
+                c = "c."
+            else:
+                c = ""
+                return "{}{}".format(c, year)
+        else:
+            return ""
+
+    @property
+    def context_info(self) -> str:
+        """Returns a lengthy street name + info to contexualize the street."""
+        return self.full_name + " " + self.grid_info() + " " + self.short_tag()
 
     def short_tag(self, suppress_current=True) -> str:
         """Possible short tag for after the name of a street to indicate historical status/context."""
@@ -477,6 +498,14 @@ class StreetList(PkModel):
     def new_entry(self, street_id):
         """Add an entry to the streetlist."""
         return StreetListEntry(list_id=self.id, street_id=street_id)
+
+    def sorted_entries(self):
+        """Return entries sorted as streets."""
+
+        def entry_key(entry):
+            return street_key(entry.street)
+
+        return sorted(self.entries, key=entry_key)
 
 
 class StreetListEntry(PkModel):

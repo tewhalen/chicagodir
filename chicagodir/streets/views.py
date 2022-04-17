@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
 import datetime
-import re
 
 import markdown
 import redis
@@ -9,6 +8,7 @@ from flask import (
     Blueprint,
     abort,
     current_app,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -20,35 +20,14 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from chicagodir.database import db
 from chicagodir.streets.models import Street, StreetChange
+from chicagodir.streets.sorting import streets_sorted
 
 from .forms import StreetEditForm, StreetSearchForm
-from .tasks import redraw_map_for_street, refresh_community_area_tags
-
-
-def atoi(text):
-    """Convert text to an integer if possible, else return the string."""
-    return int(text) if text.isdigit() else text
-
-
-def natural_keys(text):
-    """For use in sorting numeric and text stuff naturally, build keys.
-
-    alist.sort(key=natural_keys) sorts in human order
-    http://nedbatchelder.com/blog/200712/human_sorting.html
-    (See Toothy's implementation in the comments)
-    """
-    return [atoi(c) for c in re.split(r"(\d+)", text)]
-
-
-def street_key(street: Street):
-    """Given a street object, return an appropriate sorting key."""
-    return natural_keys(street.name + " " + street.suffix + " " + street.direction)
-
-
-def streets_sorted(streets):
-    """Sort street objects using appropriate key."""
-    return sorted(streets, key=street_key)
-
+from .tasks import (
+    calc_successor_info,
+    redraw_map_for_street,
+    refresh_community_area_tags,
+)
 
 blueprint = Blueprint("street", __name__, static_folder="../static")
 
@@ -56,6 +35,32 @@ blueprint = Blueprint("street", __name__, static_folder="../static")
 @blueprint.route("/streets", methods=["GET"])
 def street_search():
     """Search database for streets."""
+    form = StreetSearchForm(request.args)
+    if request.query_string and form.validate():
+        q = db.session.query(Street)
+        if form.year.data:
+
+            year = form.year.data
+            first_of_year = datetime.date(month=1, day=1, year=year)
+            q = q.filter(
+                ((Street.start_date < first_of_year) | (Street.start_date.is_(None)))
+                & ((Street.end_date > first_of_year) | (Street.end_date.is_(None)))
+            )
+        if form.term.data:
+            q = q.filter(Street.name.ilike("%" + form.term.data + "%"))
+
+        results = streets_sorted(q.limit(15).all())
+        return jsonify(
+            [
+                {
+                    "name": street.full_name,
+                    "id": street.id,
+                    "info": street.short_tag(),
+                    "label": street.context_info,
+                }
+                for street in results
+            ]
+        )
 
 
 @blueprint.route("/street/", methods=["GET", "POST"])
@@ -83,10 +88,7 @@ def street_listing():
             q = q.filter(Street.confirmed == form.confirmed.data)
 
         # end filters
-        current_streets = sorted(
-            q.all(),
-            key=street_key,
-        )
+        current_streets = streets_sorted(q.all())
         current_app.logger.info(form.confirmed.data)
 
     else:
@@ -286,6 +288,7 @@ def edit_street(tag: str):
             q = Queue()
             q.enqueue(refresh_community_area_tags, d.street_id)
             q.enqueue(redraw_map_for_street, d.street_id)
+            q.enqueue(calc_successor_info, d.street_id)
 
         return redirect(url_for("street.view_street", tag=tag))
     elif form.is_submitted():

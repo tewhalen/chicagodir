@@ -18,8 +18,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from chicagodir.directory.forms import StreetListForm
 from chicagodir.directory.models import Directory, Page, get_all_jobs
-from chicagodir.streets.models import Street, StreetList
-from chicagodir.streets.views import streets_sorted
+from chicagodir.streets.models import StreetList, StreetListEntry
 
 blueprint = Blueprint("dir", __name__, static_folder="../static")
 
@@ -83,26 +82,35 @@ def view_streetlist(tag: str):
 
     form = StreetListForm(request.form, obj=d.street_list)
 
-    # set up street choices
-    street_choices = [
-        (street.id, street.full_name)
-        for street in streets_sorted(Street.streets_given_date(d.street_list.date))
-    ]
-
-    form.set_street_choices(street_choices)
+    # form.set_street_choices(street_choices)
 
     if form.validate_on_submit():
         form.populate_obj(d.street_list)
-        for to_remove in [x for x in d.street_list.entries if x.remove]:
-            to_remove.delete()
 
         #  check for new successor street
         if form.new_entry_street.data is not None:
             new_entry = d.street_list.new_entry(street_id=form.new_entry_street.data)
 
             new_entry.save()
-
+        form = StreetListForm(request.form, obj=d.street_list)
     return render_template("dir/street_list.html", directory=d, street_list_form=form)
+
+
+@blueprint.route("/dir/<string:tag>/streetlist/remove/<int:entry_id>/", methods=["GET"])
+@login_required
+def remove_street_from_streetlist(tag: str, entry_id: int):
+    """Remove a street from directory streetlist."""
+    try:
+        d = Directory.query.filter_by(tag=tag).one()
+        entry = StreetListEntry.query.filter_by(id=entry_id).one()
+    except NoResultFound:
+        abort(404)
+    except MultipleResultsFound:
+        abort(500)
+
+    if d.street_list is not None and entry is not None:
+        entry.delete()
+    return redirect(url_for("dir.view_streetlist", tag=tag))
 
 
 @blueprint.route("/dir/<string:tag>/p/<int:page_id>/fix", methods=["GET", "POST"])
