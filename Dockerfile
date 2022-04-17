@@ -54,7 +54,14 @@ FROM poetry_base AS production
 COPY --from=builder /app/chicagodir/static /app/chicagodir/static
 
 USER root
-RUN apt-get update && apt-get install  -y imagemagick optipng curl
+RUN apt-get update && \
+    apt-get install  -yq --no-install-recommends \
+    curl \
+    imagemagick \
+    optipng \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 USER sid
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
