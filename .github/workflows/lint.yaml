@@ -43,7 +43,6 @@ jobs:
           poetry install
       - name: Install Node dependencies
         run: npm install
-      - run: cp .env.example .env
       - name: Run Node lints
         run: npm run lint
       - name: Run Python lints
