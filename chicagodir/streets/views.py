@@ -19,8 +19,10 @@ from rq import Connection, Queue
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from chicagodir.database import db
+from chicagodir.directory.forms import StreetListForm
 from chicagodir.streets.models import Street, StreetChange
 from chicagodir.streets.sorting import streets_sorted
+from chicagodir.streets.streetlist import StreetList, StreetListEntry
 
 from .forms import StreetEditForm, StreetSearchForm
 from .tasks import (
@@ -294,3 +296,88 @@ def edit_street(tag: str):
     elif form.is_submitted():
         current_app.logger.warning("submitted but invalid")
     return render_template("streets/street_edit.html", street=d, street_form=form)
+
+
+@blueprint.route("/streets/list/<int:streetlist_id>/", methods=["GET", "POST"])
+def view_streetlist(streetlist_id: int):
+    """Viewing a streetlist."""
+    try:
+        sl = StreetList.query.filter_by(id=streetlist_id).one()
+    except NoResultFound:
+        abort(404)
+    except MultipleResultsFound:
+        abort(500)
+    streetlist = sl.sorted_streets()
+    street_groups = []
+    for i in range(0, len(streetlist), 100):
+        street_groups.append(streetlist[i : i + 100])
+    return render_template(
+        "streets/streetlist_view.html", streetlist=sl, street_groups=street_groups
+    )
+
+
+@blueprint.route("/streets/list/new", methods=["GET", "POST"])
+def new_streetlist():
+    """Create a new a streetlist."""
+    streetlist = StreetList(name="new streetlist", date=datetime.date.today())
+    streetlist.save()
+    return redirect(url_for("street.view_streetlist", streetlist_id=streetlist.id))
+
+
+@blueprint.route("/streets/list/<int:streetlist_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_streetlist(streetlist_id: int):
+    """View a street list associated with a directory."""
+    try:
+        street_list = StreetList.query.filter_by(id=streetlist_id).one()
+    except NoResultFound:
+        abort(404)
+    except MultipleResultsFound:
+        abort(500)
+
+    form = StreetListForm(request.form, obj=street_list)
+
+    # form.set_street_choices(street_choices)
+
+    if form.validate_on_submit():
+        form.populate_obj(street_list)
+
+        #  check for new successor street
+        if form.new_entry_street.data is not None:
+            new_entry = street_list.new_entry(street_id=form.new_entry_street.data)
+
+            new_entry.save()
+        street_list.save()
+        form = StreetListForm(request.form, obj=street_list)
+    return render_template(
+        "streets/streetlist_edit.html", streetlist=street_list, street_list_form=form
+    )
+
+
+@blueprint.route(
+    "/streets/list/<int:streetlist_id>/edit/remove/<int:entry_id>/", methods=["GET"]
+)
+@login_required
+def remove_street_from_streetlist(streetlist_id: int, entry_id: int):
+    """Remove a street from directory streetlist."""
+    try:
+        entry = StreetListEntry.query.filter_by(id=entry_id).one()
+    except NoResultFound:
+        abort(404)
+    except MultipleResultsFound:
+        abort(500)
+
+    if entry is not None:
+        entry.delete()
+    return redirect(url_for("street.edit_streetlist", streetlist_id=streetlist_id))
+
+
+@blueprint.route("/streets/lists/", methods=["GET"])
+def list_streetlists():
+    """Show all the known streetlists."""
+    streetlists = sorted(db.session.query(StreetList).all(), key=lambda x: x.date)
+
+    return render_template(
+        "streets/streetlist_list.html",
+        streetlists=streetlists,
+    )

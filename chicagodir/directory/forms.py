@@ -2,7 +2,7 @@
 """Street forms."""
 
 from flask_wtf import FlaskForm
-from wtforms import DateField, IntegerField, StringField
+from wtforms import DateField, IntegerField, StringField, TextAreaField
 from wtforms.validators import DataRequired, Length, Optional
 
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
@@ -28,7 +28,6 @@ class StreetListForm(FlaskForm):
     url = StringField("URL", validators=[Optional()])
 
     # entries = FieldList(FormField(EntryForm))
+    text = TextAreaField("Notes")
 
-    new_entry_street = IntegerField(
-        "Street",
-    )
+    new_entry_street = IntegerField("Street", validators=[Optional()])

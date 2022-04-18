@@ -1,24 +1,11 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
 import csv
-from datetime import date
 
-from flask import (
-    Blueprint,
-    abort,
-    current_app,
-    flash,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from chicagodir.directory.forms import StreetListForm
 from chicagodir.directory.models import Directory, Page, get_all_jobs
-from chicagodir.streets.models import StreetList, StreetListEntry
 
 blueprint = Blueprint("dir", __name__, static_folder="../static")
 
@@ -40,7 +27,7 @@ def profession_listing():
 @blueprint.route("/dir/new", methods=["GET", "POST"])
 @login_required
 def new_directory():
-    """Show all the directories."""
+    """Create a new directory."""
     d = Directory(name="Lakeside Directory", year="1911", tag="lakeside-1911")
     d.save()
     return redirect("/dir/")
@@ -59,58 +46,6 @@ def view_page(tag: str, page: int):
     d = Directory.query.filter_by(tag=tag).one()
     page = Page.query.filter_by(directory_id=d.id, number=page).first()
     return render_template("dir/page_listing.html", directory=d, page=page)
-
-
-@blueprint.route("/dir/<string:tag>/streetlist", methods=["GET", "POST"])
-def view_streetlist(tag: str):
-    """View a street list associated with a directory."""
-    try:
-        d = Directory.query.filter_by(tag=tag).one()
-    except NoResultFound:
-        abort(404)
-    except MultipleResultsFound:
-        abort(500)
-
-    if d.street_list is None:
-
-        current_app.logger.warning("making a new streetlist")
-
-        sl = StreetList(name=d.name, date=date(year=d.year, month=1, day=1))
-        sl.save()
-        d.street_list = sl
-        d.save()
-
-    form = StreetListForm(request.form, obj=d.street_list)
-
-    # form.set_street_choices(street_choices)
-
-    if form.validate_on_submit():
-        form.populate_obj(d.street_list)
-
-        #  check for new successor street
-        if form.new_entry_street.data is not None:
-            new_entry = d.street_list.new_entry(street_id=form.new_entry_street.data)
-
-            new_entry.save()
-        form = StreetListForm(request.form, obj=d.street_list)
-    return render_template("dir/street_list.html", directory=d, street_list_form=form)
-
-
-@blueprint.route("/dir/<string:tag>/streetlist/remove/<int:entry_id>/", methods=["GET"])
-@login_required
-def remove_street_from_streetlist(tag: str, entry_id: int):
-    """Remove a street from directory streetlist."""
-    try:
-        d = Directory.query.filter_by(tag=tag).one()
-        entry = StreetListEntry.query.filter_by(id=entry_id).one()
-    except NoResultFound:
-        abort(404)
-    except MultipleResultsFound:
-        abort(500)
-
-    if d.street_list is not None and entry is not None:
-        entry.delete()
-    return redirect(url_for("dir.view_streetlist", tag=tag))
 
 
 @blueprint.route("/dir/<string:tag>/p/<int:page_id>/fix", methods=["GET", "POST"])

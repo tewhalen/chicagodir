@@ -93,6 +93,24 @@ chicagocity.directory / {{street.full_name}}
                 </div>
             </div>
             {% endif %}
+            {% if street.street_lists() %}
+            <div class="card  d-flex align-items-start">
+
+                <div class="card-body">
+                    <h4 class="card-title fw-bold mb-0"><i class="fas fa-list"></i>Appears in
+                    </h4>
+                    <ul class="list-group list-group-flush">
+                        {% for list in street.street_lists() %}
+                        <li class="list-group-item"><a
+                                href="{{url_for('street.view_streetlist', streetlist_id=list.id)}}">
+                                {{list.name}} ({{list.date.year}})</a>
+
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
 
             <div class="card d-flex align-items-start">
 

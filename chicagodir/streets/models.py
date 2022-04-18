@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
-from chicagodir.streets.sorting import street_key
+from chicagodir.streets.streetlist import StreetListEntry
 
 post_type_map = {
     "AY": "AVE",
@@ -432,7 +432,7 @@ class Street(PkModel):
             self.record_edit(current_user, str(changes))
 
     @property
-    def timestamp(self):
+    def timestamp(self) -> datetime.datetime:
         """Return the timestamp of latest edit to this street."""
         q = db.select(db.func.max(StreetEdit.timestamp).label("timestamp")).filter(
             StreetEdit.street_id == self.id
@@ -442,6 +442,15 @@ class Street(PkModel):
             return row["timestamp"]
         else:
             return datetime.datetime.now()
+
+    def street_lists(self) -> list:
+        """Return list of street lists in which this street appears."""
+        results = (
+            db.session.query(StreetListEntry)
+            .filter(StreetListEntry.street_id == self.id)
+            .all()
+        )
+        return sorted([entry.list for entry in results], key=lambda x: x.date)
 
 
 class StreetChange(PkModel):
@@ -480,41 +489,3 @@ class StreetEdit(PkModel):
 
     # note of edit
     note = Column(db.Text())
-
-
-class StreetList(PkModel):
-    """A reference work that has a list of streets extant in a year."""
-
-    __tablename__ = "street_lists"
-
-    name = Column(db.String(80), nullable=False)
-    date = Column(db.Date(), nullable=False, index=True)
-
-    url = Column(db.Text())
-
-    # other notes
-    text = Column(db.Text())
-
-    def new_entry(self, street_id):
-        """Add an entry to the streetlist."""
-        return StreetListEntry(list_id=self.id, street_id=street_id)
-
-    def sorted_entries(self):
-        """Return entries sorted as streets."""
-
-        def entry_key(entry):
-            return street_key(entry.street)
-
-        return sorted(self.entries, key=entry_key)
-
-
-class StreetListEntry(PkModel):
-    """An entry in a list of streets."""
-
-    __tablename__ = "street_list_entries"
-
-    list_id = reference_col("street_lists")
-    list = relationship("StreetList", backref="entries", foreign_keys=[list_id])
-
-    street_id = reference_col("streets", nullable=True)
-    street = relationship("Street", foreign_keys=[street_id])
