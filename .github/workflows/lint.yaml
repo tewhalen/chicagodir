@@ -47,9 +47,12 @@ jobs:
         run: npm run lint
       - name: Run Python lints
         run: poetry run flask lint --check
+        env:
+          FLASK_APP: autoapp.py
       - name: Run Python tests
         run: poetry run flask test
         env:
+          FLASK_APP: autoapp.py
           POSTGRES_HOST: localhost
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
           POSTGRES_USER: hello_flask
