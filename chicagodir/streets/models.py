@@ -200,7 +200,7 @@ class Street(PkModel):
         return [change.to_street for change in self.successor_changes()]
 
     def calculate_single_successor(self):
-        """If this is succeeded by a single street, return its name and suffix."""
+        """If this is succeeded by a single street, store its name and suffix."""
         # FIX ME this query is slow to run 1000s of times
         q = (
             db.session.query(Street.name, Street.suffix)
@@ -214,6 +214,22 @@ class Street(PkModel):
             self.successor_name = "{} {}".format(
                 street_title_case(q[0].name.title()), q[0].suffix.capitalize()
             )
+
+    def get_grid_location_from_successors(self):
+        """Figure out our grid location based on our successor streets"""
+        if self.diagonal or self.grid_direction or self.grid_location:
+            return
+        successors = self.find_current_successors()
+        directions = {x.grid_direction for x in successors}
+        directions.discard(None)
+        if len(directions) == 1:
+            self.grid_direction = directions.pop()
+        locations = {x.grid_location for x in successors}
+        locations.discard(None)
+        if len(locations) == 1:
+            self.grid_location = locations.pop()
+        if any(x.diagonal for x in successors):
+            self.diagonal = True
 
     @property
     def predecessors(self) -> "list[Street]":

@@ -63,7 +63,7 @@ def refresh_community_area_tags(street_id: str):
 
 
 def calc_successor_info(street_id: str):
-    """Given a street that has just been edited, recalcuate which CAs it passes through."""
+    """Given a street that has just been edited, calculate what its single successor is."""
     # for street in Street.query.all():
     #    if street.successor_name is None:
     #        street.calculate_single_successor()
@@ -72,6 +72,13 @@ def calc_successor_info(street_id: str):
     d = Street.query.filter_by(street_id=street_id).one()
 
     d.calculate_single_successor()
+    d.save()
+
+
+def inherit_grid(street_id: str):
+    d = Street.query.filter_by(street_id=street_id).one()
+
+    d.get_grid_location_from_successors()
     d.save()
 
 

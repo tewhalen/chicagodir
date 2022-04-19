@@ -29,9 +29,35 @@ from .tasks import (
     calc_successor_info,
     redraw_map_for_street,
     refresh_community_area_tags,
+    inherit_grid,
 )
 
 blueprint = Blueprint("street", __name__, static_folder="../static")
+
+## lifted from sqlalchemy_utils
+## \ is the escape character postgres defaults to
+def escape_like(string, escape_char="\\"):
+    """
+    Escape the string paremeter used in SQL LIKE expressions.
+
+    ::
+
+        from sqlalchemy_utils import escape_like
+
+
+        query = session.query(User).filter(
+            User.name.ilike(escape_like('John'))
+        )
+
+
+    :param string: a string to escape
+    :param escape_char: escape character
+    """
+    return (
+        string.replace(escape_char, escape_char * 2)
+        .replace("%", escape_char + "%")
+        .replace("_", escape_char + "_")
+    )
 
 
 @blueprint.route("/streets", methods=["GET"])
@@ -49,7 +75,10 @@ def street_search():
                 & ((Street.end_date > first_of_year) | (Street.end_date.is_(None)))
             )
         if form.term.data:
-            q = q.filter(Street.name.ilike("%" + form.term.data + "%"))
+            q = q.filter(
+                (Street.name.ilike("%" + escape_like(form.term.data) + "%"))
+                | (Street.street_id.ilike(escape_like(form.term.data) + "%"))
+            )
 
         results = streets_sorted(q.limit(15).all())
         return jsonify(
@@ -83,7 +112,7 @@ def street_listing():
             year_str = "as of {}".format(str(year))
 
         if form.name.data:
-            q = q.filter(Street.name.ilike("%" + form.name.data + "%"))
+            q = q.filter(Street.name.ilike("%" + escape_like(form.name.data) + "%"))
 
         if form.confirmed.data is not None:
 
@@ -291,6 +320,7 @@ def edit_street(tag: str):
             q.enqueue(refresh_community_area_tags, d.street_id)
             q.enqueue(redraw_map_for_street, d.street_id)
             q.enqueue(calc_successor_info, d.street_id)
+            q.enqueue(inherit_grid, d.street_id)
 
         return redirect(url_for("street.view_street", tag=tag))
     elif form.is_submitted():
