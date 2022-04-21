@@ -16,6 +16,7 @@ from chicagodir.streets.geodata import (
     load_areas,
 )
 from chicagodir.streets.models import Street
+from chicagodir.streets.streetlist import StreetList
 
 # from chicagodir.database import db
 
@@ -149,6 +150,67 @@ def redraw_map_for_street(street_id: str):
             tempfile.name,
             "chicitydir",
             "streets/maps/{}.png".format(street.street_id),
+            ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
+        )
+        # for some reason this fails...
+        # os.unlink(tempfile.name)
+
+
+def redraw_map_for_streetlist(streetlist_id: int):
+    """Regenerate the map for a streetlist."""
+    streetlist = StreetList.query.filter_by(id=streetlist_id).one()
+
+    areas = load_areas()
+    my_map = areas.boundary.plot(color="grey", linewidth=0.25)
+    my_map.set_axis_off()
+
+    street_data = None
+    street_color = "black"
+
+    for street in streetlist.sorted_streets():
+
+        if street.current:
+            street_data = find_road_geom([street])
+            # highlight where this street runs
+        else:
+            current_streets = street.find_current_successors()
+
+            if current_streets:
+
+                street_data = find_road_geom(current_streets)
+                # if there's just one final street:
+                if len(current_streets) == 1:
+                    final = current_streets.pop()
+                    if street.min_address and street.max_address:
+                        clipping_area = clip_by_address(
+                            street_data,
+                            final.direction,
+                            street.min_address,
+                            street.max_address,
+                        )
+                        street_data = street_data.clip(clipping_area)
+        if street_data is not None:
+            street_data.plot(ax=my_map, color=street_color, linewidth=0.5)
+
+    plt.tight_layout()
+
+    with NamedTemporaryFile(suffix=".png") as tempfile:
+        plt.savefig(tempfile, format="png", dpi=200)
+        plt.close()
+        subprocess.run(["mogrify", "-trim", "+repage", tempfile.name])
+        subprocess.run(["optipng", "-quiet", tempfile.name])
+
+        linode_obj_config = {
+            "aws_access_key_id": env.str("AWS_ACCESS_KEY"),
+            "aws_secret_access_key": env.str("AWS_SECRET_KEY"),
+            "endpoint_url": "https://us-east-1.linodeobjects.com",
+        }
+
+        client = boto3.client("s3", **linode_obj_config)
+        client.upload_file(
+            tempfile.name,
+            "chicitydir",
+            "streets/lists/maps/{}.png".format(streetlist.id),
             ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
         )
         # for some reason this fails...

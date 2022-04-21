@@ -271,7 +271,19 @@ class Street(PkModel):
                 c = "c."
             else:
                 c = ""
-                return "{}{}".format(c, year)
+            return "{}{}".format(c, year)
+        else:
+            return ""
+
+    def start_date_info(self) -> str:
+        """Return some info about the start date of the street."""
+        if self.start_date:
+            year = self.start_date.year
+            if self.start_date_circa:
+                c = "c."
+            else:
+                c = ""
+            return "{}{}".format(c, year)
         else:
             return ""
 

@@ -14,8 +14,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 gridmaker = Grid()
 
 # Filepaths
-areas_fp = HERE + "/data/CommAreas.shp"
-roads_fp = HERE + "/data/trans.shp"
+# areas_fp = HERE + "/data/CommAreas.shp"
 
 
 def clip_by_address(data, direction, min_address, max_address):
@@ -78,8 +77,16 @@ class RoadCache(GPDCache):
         return self._cache
 
 
-load_areas = GPDCache(areas_fp)
+# load_areas = GPDCache(areas_fp)
 # load_roads = RoadCache(roads_fp)
+
+
+def load_areas():
+    """Load the community areas from the database"""
+    sql = "SELECT id, name, geom from comm_areas"
+
+    with db.get_engine().connect() as connection:
+        return gpd.read_postgis(sql, connection)
 
 
 def find_road_geom(streets):
@@ -100,9 +107,7 @@ def active_community_areas(geom):
 def find_community_areas(geom):
     """Name the community areas intersected by given geometry."""
     active_cas = active_community_areas(geom)
-    return [
-        (int(n), COMMUNITY_AREAS[int(n)]) for n in active_cas["AREA_NUMBE"].unique()
-    ]
+    return [(int(n), COMMUNITY_AREAS[int(n)]) for n in active_cas["id"].unique()]
 
 
 COMMUNITY_AREAS = {

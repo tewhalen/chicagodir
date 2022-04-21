@@ -28,10 +28,18 @@ chicagocity.directory / {{street.full_name}}
 
     {% endif %}
     <h4>{{street.grid_location}}{{street.grid_direction}} | from
-        {{street.min_address}}
+        {{street.min_address|default("___", true)}}
         to
-        {{street.max_address}}
+        {{street.max_address|default("___", true)}}
     </h4>
+    {% if street.start_date or street.end_date or street.current %}
+    {% if street.current %}
+    <h4>{{street.start_date_info()|default("?", true)}} - present</h4>
+
+    {% else %}
+    <h4>{{street.start_date_info()|default("?", true)}} – {{street.end_date_info()}}</h4>
+    {% endif %}
+    {% endif %}
     <div>{{street.historical_note}}</div>
 
     <div class="container px-4 py-5" id="icon-grid">

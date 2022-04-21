@@ -30,6 +30,7 @@ from .tasks import (
     redraw_map_for_street,
     refresh_community_area_tags,
     inherit_grid,
+    redraw_map_for_streetlist,
 )
 
 blueprint = Blueprint("street", __name__, static_folder="../static")
@@ -379,6 +380,11 @@ def edit_streetlist(streetlist_id: int):
             new_entry.save()
         street_list.save()
         form = StreetListForm(request.form, obj=street_list)
+
+        with Connection(redis.from_url(current_app.config["REDIS_URL"])):
+            q = Queue()
+            q.enqueue(redraw_map_for_streetlist, street_list.id)
+
     return render_template(
         "streets/streetlist_edit.html", streetlist=street_list, street_list_form=form
     )
