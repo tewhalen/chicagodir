@@ -338,12 +338,10 @@ def view_streetlist(streetlist_id: int):
         abort(404)
     except MultipleResultsFound:
         abort(500)
-    streetlist = sl.sorted_streets()
-    street_groups = []
-    for i in range(0, len(streetlist), 100):
-        street_groups.append(streetlist[i : i + 100])
+
     return render_template(
-        "streets/streetlist_view.html", streetlist=sl, street_groups=street_groups
+        "streets/streetlist_view.html",
+        streetlist=sl,
     )
 
 

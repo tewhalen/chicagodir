@@ -94,26 +94,19 @@
 
                 <h3>Streets</h3>
                 <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Street</th>
 
-                            <!-- <th>Date of Change</th>
-                                <th>Source</th>-->
-
-                            <th>Remove?</th>
-
-                        </tr>
-                    </thead>
                     <tbody>
-                        {% for entry in streetlist.sorted_entries() %}
+                        {% for subgroup in streetlist.sorted_entries()|batch(4) %}
+
                         <tr>
+                            {% for entry in subgroup %}
                             <td>{{entry.street.full_name}} <i>
                                     {{entry.street.grid_info()}} {{entry.street.short_tag()}}</i>
 
-                            <td><a class="btn btn-primary"
-                                    href="{{url_for('street.remove_street_from_streetlist', entry_id=entry.id, streetlist_id=streetlist.id)}}">remove</a>
+                                <a class="btn-danger" href="{{url_for('street.remove_street_from_streetlist',
+                                    entry_id=entry.id, streetlist_id=streetlist.id)}}">✗</a>
                             </td>
+                            {% endfor %}
                         </tr>
                         {% endfor %}
                         <tr>

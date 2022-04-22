@@ -47,6 +47,7 @@
   {% endif %}
   <div class="accordion" id="accordionExample">
     <div class="card">
+
       {% for street_group in current_streets %}
 
       <div class="card-header" id="heading{{loop.index}}">
@@ -60,42 +61,18 @@
       <div id="collapse{{loop.index}}" class="collapse {%if loop.index == 1 %}show{% endif %}"
         aria-labelledby="heading{{loop.index}}" data-bs-parent="#accordionExample">
         <div class="card-body row">
+          {% for subgroup in street_group|batch(25) %}
+
           <div class="col-sm">
             <ul>
-              {% for street in street_group[:25] %}
+              {% for street in subgroup %}
               <li><a href="{{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}
                 </a>{{street.short_tag()}}</li>
               {% endfor %}
             </ul>
           </div>
-          <div class="col-sm">
-            <ul>
-              {% for street in street_group[25:50] %}
-              <li><a
-                  href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>{{street.short_tag()}}
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
 
-          <div class="col-sm">
-            <ul>
-              {% for street in street_group[50:75] %}
-              <li><a
-                  href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>{{street.short_tag()}}
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-          <div class="col-sm">
-            <ul>
-              {% for street in street_group[75:] %}
-              <li><a
-                  href=" {{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}</a>{{street.short_tag()}}
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
+          {% endfor %}
         </div>
       </div>
 
