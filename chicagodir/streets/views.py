@@ -27,16 +27,16 @@ from chicagodir.streets.streetlist import StreetList, StreetListEntry
 from .forms import StreetEditForm, StreetSearchForm
 from .tasks import (
     calc_successor_info,
-    redraw_map_for_street,
-    refresh_community_area_tags,
     inherit_grid,
+    redraw_map_for_street,
     redraw_map_for_streetlist,
+    refresh_community_area_tags,
 )
 
 blueprint = Blueprint("street", __name__, static_folder="../static")
 
-## lifted from sqlalchemy_utils
-## \ is the escape character postgres defaults to
+# lifted from sqlalchemy_utils
+# \ is the escape character postgres defaults to
 def escape_like(string, escape_char="\\"):
     """
     Escape the string paremeter used in SQL LIKE expressions.

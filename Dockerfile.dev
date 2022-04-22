@@ -5,12 +5,19 @@ FROM python:3.10.4-slim-buster AS poetry_base
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install  -yq --no-install-recommends \
+    curl \
+    imagemagick \
+    optipng \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN useradd -m sid
 RUN chown -R sid:sid /app
 USER sid
 
-COPY --chown=sid:sid chicagodir chicagodir
-COPY --chown=sid:sid webpack.config.js autoapp.py ./
 
 # python
 ENV PYTHONUNBUFFERED=1 \
@@ -28,7 +35,10 @@ ENV PATH="$POETRY_HOME/bin:/home/sid/.local/bin/:$PATH"
 
 COPY ["poetry.lock", "pyproject.toml", "./"]
 RUN pip install poetry
-RUN poetry install --no-dev
+# Install the python +development stuff
+
+RUN poetry install
+
 
 # ================================== BUILDER ===================================
 FROM poetry_base as builder
@@ -42,26 +52,18 @@ COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY package.json ./
 RUN npm install
 
+
 COPY --chown=sid:sid assets assets
 #COPY .env.example .env
+COPY --chown=sid:sid chicagodir chicagodir
+COPY --chown=sid:sid webpack.config.js autoapp.py ./
 ENV FLASK_APP autoapp.py
 RUN poetry run npm run-script build
 
 # ================================== DEVEL ===================================
 FROM builder as devel
-USER root
-RUN apt-get update && \
-    apt-get install  -yq --no-install-recommends \
-    curl \
-    imagemagick \
-    optipng \
-    && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-USER sid
 
-# Install the python development stuff
-RUN poetry install
+USER sid
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisord_programs /etc/supervisor/conf.d

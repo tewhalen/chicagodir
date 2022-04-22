@@ -77,6 +77,7 @@ def calc_successor_info(street_id: str):
 
 
 def inherit_grid(street_id: str):
+    """Using street sucessors, reverse-inherit a grid location."""
     d = Street.query.filter_by(street_id=street_id).one()
 
     d.get_grid_location_from_successors()

@@ -216,7 +216,7 @@ class Street(PkModel):
             )
 
     def get_grid_location_from_successors(self):
-        """Figure out our grid location based on our successor streets"""
+        """Figure out our grid location based on our successor streets."""
         if self.diagonal or self.grid_direction or self.grid_location:
             return
         successors = self.find_current_successors()

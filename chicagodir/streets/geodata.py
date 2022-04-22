@@ -82,7 +82,7 @@ class RoadCache(GPDCache):
 
 
 def load_areas():
-    """Load the community areas from the database"""
+    """Load the community areas from the database."""
     sql = "SELECT id, name, geom from comm_areas"
 
     with db.get_engine().connect() as connection:
