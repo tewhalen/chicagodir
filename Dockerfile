@@ -64,7 +64,8 @@ FROM poetry_base AS production
 USER root
 
 USER sid
-
+COPY --chown=sid:sid chicagodir chicagodir
+COPY --chown=sid:sid webpack.config.js autoapp.py ./
 COPY --from=builder /app/chicagodir/static /app/chicagodir/static
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
