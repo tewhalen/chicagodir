@@ -1,6 +1,6 @@
 # ================================== PYTHON BASE ===================================
 
-FROM node:17-buster-slim AS node
+FROM node:18-buster-slim AS node
 FROM python:3.10.4-slim-buster AS poetry_base
 
 WORKDIR /app
