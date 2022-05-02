@@ -44,7 +44,7 @@ numpy = "^1.22.3"
 Rtree = "^1.0.0"
 
 # AWS
-boto3 = "^1.22.1"
+boto3 = "^1.22.4"
 
 # dependencies
 click = "^8.1.2"
