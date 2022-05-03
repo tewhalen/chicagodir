@@ -21,7 +21,7 @@ def int_or_none(x) -> int:
 class StreetListForm(FlaskForm):
     """Form for modifying a street list."""
 
-    name = StringField("Name", validators=[DataRequired(), Length(max=40)])
+    name = StringField("Name", validators=[DataRequired()])
 
     date = DateField("Start Date", validators=[Optional()])
 
