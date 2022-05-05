@@ -53,8 +53,5 @@ jobs:
         run: poetry run flask test
         env:
           FLASK_APP: autoapp.py
-          POSTGRES_HOST: localhost
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
-          POSTGRES_USER: hello_flask
-          POSTGRES_PASSWORD: hello_flask
-          POSTGRES_DB: chicagodir_dev
+          DATABASE_URL: postgresql://hello_flask:hello_flask@db:${POSTGRES_PORT}/chicagodir_dev
