@@ -17,7 +17,7 @@ DEBUG = ENV == "development"
 SQLALCHEMY_DATABASE_URI = (
     env.str("DATABASE_URL", default="sqlite:////tmp/dev.db")
     .replace("postgres://", "postgresql://")
-    .replace("${POSTGRES_PORT}", POSTGRES_PORT)
+    .replace("${POSTGRES_PORT}", str(POSTGRES_PORT))
 )
 SECRET_KEY = env.str("SECRET_KEY", default="not-so-secret")
 SEND_FILE_MAX_AGE_DEFAULT = env.int("SEND_FILE_MAX_AGE_DEFAULT", default=0)
