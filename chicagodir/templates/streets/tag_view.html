@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+
+{% macro validated_field(field) -%}
+{% if field.errors %}
+
+{{ field(class_="form-control is-invalid") }}
+{% for error in field.errors %}
+<div class="invalid-feedback">
+    {{error}}
+</div>
+{% endfor %}
+{% else %}
+{{ field(class_="form-control") }}
+{% endif %}
+
+{%- endmacro %}
+
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/street/">Streets</a></li>
+            <li class="breadcrumb-item"><a href="/streets/tags/">Tags</a></li>
+
+            <li class="breadcrumb-item active" aria-current="page">{{tag}}</li>
+        </ol>
+    </nav>
+    <h2>Streets tagged '{{tag}}'</h2>
+    <!-- <p>tag.text</p>
+
+    {% if current_user and current_user.is_authenticated %}
+    <a class="btn btn-primary" href="{{url_for('street.edit_tag', tag=tag)}}">edit</a>
+    {% else %}
+    <a class="btn btn-primary" href="{{url_for('public.register')}}">create an account to edit</a>
+    {% endif %}-->
+
+    <div class="card d-flex align-items-start">
+        <div class="card-body">
+            <h4 class="card-title fw-bold mb-0"> <i class="fas fa-map-marked"></i>
+                Streets</h4>
+            <img width="250px"
+                src="https://chicitydir.us-east-1.linodeobjects.com/streets/lists/maps/tag/{{tag}}.png" />
+        </div>
+    </div>
+
+
+    <div class="accordion" id="accordionExample">
+        <div class="card">
+            {% for street_group in streetlist|batch(60) %}
+
+            <div class="card-header" id="heading{{loop.index}}">
+                <h4 class="mb-0">
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse{{loop.index}}" aria-expanded="false"
+                        aria-controls="collapse{{loop.index}}">
+                        {{street_group[0].name}} - {{street_group[-1].name}}
+                    </button>
+                </h4>
+            </div>
+            <div id="collapse{{loop.index}}" class="collapse {%if loop.index == 1 %}show{% endif %}"
+                aria-labelledby="heading{{loop.index}}" data-bs-parent="#accordionExample">
+                <div class="card-body row">
+                    {% for subgroup in street_group|batch(15) %}
+                    <div class="col-sm">
+                        <ul>
+                            {% for street in subgroup %}
+                            <li><a href="{{ url_for('street.view_street', tag=street.street_id) }}">{{street.full_name}}
+                                </a>{{street.short_tag()}}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            {% endfor %}
+
+
+
+
+        </div>
+
+    </div>
+    </form>
+
+
+
+
+
+</div>
+{% endblock %}
