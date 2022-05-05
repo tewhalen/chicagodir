@@ -12,13 +12,10 @@ env = Env()
 env.read_env()
 
 ENV = env.str("FLASK_ENV", default="production")
-POSTGRES_PORT = env.int("POSTGRES_PORT", default=5432)
 DEBUG = ENV == "development"
-SQLALCHEMY_DATABASE_URI = (
-    env.str("DATABASE_URL", default="sqlite:////tmp/dev.db")
-    .replace("postgres://", "postgresql://")
-    .replace("${POSTGRES_PORT}", str(POSTGRES_PORT))
-)
+SQLALCHEMY_DATABASE_URI = env.str(
+    "DATABASE_URL", default="sqlite:////tmp/dev.db"
+).replace("postgres://", "postgresql://")
 SECRET_KEY = env.str("SECRET_KEY", default="not-so-secret")
 SEND_FILE_MAX_AGE_DEFAULT = env.int("SEND_FILE_MAX_AGE_DEFAULT", default=0)
 BCRYPT_LOG_ROUNDS = env.int("BCRYPT_LOG_ROUNDS", default=13)
