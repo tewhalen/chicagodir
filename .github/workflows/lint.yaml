@@ -54,4 +54,4 @@ jobs:
         env:
           FLASK_APP: autoapp.py
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
-          DATABASE_URL: postgresql://hello_flask:hello_flask@db:${POSTGRES_PORT}/chicagodir_dev
+          DATABASE_URL: postgresql://hello_flask:hello_flask@localhost:${POSTGRES_PORT}/chicagodir_dev
