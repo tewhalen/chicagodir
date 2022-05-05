@@ -1,7 +1,6 @@
 """Settings module for test app."""
 import os
 
-
 ENV = "development"
 TESTING = True
 SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]

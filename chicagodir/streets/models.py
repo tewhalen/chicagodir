@@ -159,6 +159,7 @@ class Street(PkModel):
 
     @classmethod
     def empty_street(cls):
+        """Generate a new empty street with a unique street id."""
         new_id = (
             base64.urlsafe_b64encode(uuid.uuid1().bytes).rstrip(b"=").decode("ascii")
         )
@@ -493,6 +494,17 @@ class Street(PkModel):
             .all()
         )
         return sorted([entry.list for entry in results], key=lambda x: x.date)
+
+    def regenerate_id(self):
+        """Change the street_id of this street to reflect the new name."""
+        i = 0
+        while (
+            db.session.query(Street)
+            .filter(Street.street_id == "{:.8}_{:02}".format(self.name, i))
+            .first()
+        ):
+            i += 1
+        self.street_id = "{:.8}_{:02}".format(self.name, i)
 
 
 class StreetChange(PkModel):

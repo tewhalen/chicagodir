@@ -364,6 +364,24 @@ def new_street():
     return redirect(url_for("street.edit_street", tag=street.street_id))
 
 
+@blueprint.route("/street/<string:street_id>/regen_id", methods=["GET", "POST"])
+@login_required
+def regenerate_street_id(street_id: str):
+    """Regenerate the street id for this street."""
+    """Editing a street."""
+    try:
+        street = Street.query.filter_by(street_id=street_id).one()
+    except NoResultFound:
+        abort(404)
+    except MultipleResultsFound:
+        abort(500)
+
+    street.regenerate_id()
+
+    street.save()
+    return redirect(url_for("street.edit_street", tag=street.street_id))
+
+
 @blueprint.route("/streets/list/<int:streetlist_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_streetlist(streetlist_id: int):
