@@ -20,7 +20,9 @@ def natural_keys(text):
 
 def street_key(street):
     """Given a street object, return an appropriate sorting key."""
-    return natural_keys(street.name + " " + street.suffix + " " + street.direction)
+    return natural_keys(
+        street.name + " " + str(street.suffix or "") + " " + str(street.direction or "")
+    )
 
 
 def streets_sorted(streets):

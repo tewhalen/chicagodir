@@ -346,11 +346,22 @@ def view_streetlist(streetlist_id: int):
 
 
 @blueprint.route("/streets/list/new", methods=["GET", "POST"])
+@login_required
 def new_streetlist():
     """Create a new a streetlist."""
     streetlist = StreetList(name="new streetlist", date=datetime.date.today())
     streetlist.save()
     return redirect(url_for("street.view_streetlist", streetlist_id=streetlist.id))
+
+
+@blueprint.route("/street/new", methods=["GET", "POST"])
+@login_required
+def new_street():
+    """Create a new a streetlist."""
+    street = Street.empty_street()
+
+    street.save()
+    return redirect(url_for("street.edit_street", tag=street.street_id))
 
 
 @blueprint.route("/streets/list/<int:streetlist_id>/edit", methods=["GET", "POST"])

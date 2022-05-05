@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Street models."""
 
+import base64
 import datetime
 import re
+import uuid
 
 from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -155,6 +157,18 @@ class Street(PkModel):
 
     __table_args__ = (db.Index("idx_streets_name_suff", "name", "suffix"),)
 
+    @classmethod
+    def empty_street(cls):
+        new_id = (
+            base64.urlsafe_b64encode(uuid.uuid1().bytes).rstrip(b"=").decode("ascii")
+        )
+        return cls(
+            street_id=new_id,
+            name="** new street **",
+            suffix="",
+            skip=True,
+        )
+
     def __repr__(self):
         """Represent instance as a unique string."""
         return f"<Street({self.name})>"
@@ -166,7 +180,7 @@ class Street(PkModel):
             [
                 self.direction or "",
                 street_title_case(self.name),
-                self.suffix.capitalize() or "",
+                (self.suffix or "").capitalize(),
                 self.suffix_direction or "",
             ]
         ).strip()
@@ -177,7 +191,7 @@ class Street(PkModel):
         return " ".join(
             [
                 street_title_case(self.name),
-                self.suffix.capitalize() or "",
+                (self.suffix or "").capitalize(),
             ]
         )
 
