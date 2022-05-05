@@ -3,7 +3,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import DateField, IntegerField, StringField, TextAreaField
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms.validators import DataRequired, Optional
 
 direction_choices = [("", ""), ("N", "N"), ("S", "S"), ("E", "E"), ("W", "W")]
 

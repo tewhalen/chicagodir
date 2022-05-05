@@ -90,7 +90,6 @@ class StreetEditForm(FlaskForm):
 
     direction = SelectField("Direction", choices=direction_choices)
     name = StringField("Name", validators=[DataRequired(), Length(max=40)])
-
     suffix = StringField("Suffix", validators=[Length(max=8)])
 
     grid_direction = SelectField("Grid Direction", choices=direction_choices)
