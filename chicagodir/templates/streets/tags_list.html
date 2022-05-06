@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+
+
+
+
+
+<script>
+  if (typeof ($.fn.popover) != 'undefined') {
+    alert("uh oh");
+  }
+</script>
+<div class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/street/">Streets</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Tags</li>
+
+    </ol>
+  </nav>
+  <header class="py-3 mb-4 border-bottom">
+    <div class="container d-flex flex-wrap justify-content-center">
+      <a href="/street/" class="d-flex align-items-center mb-3 mb-lg-0 me-lg-auto text-dark text-decoration-none">
+        <i class="fas fa-road"></i>
+        <span class="fs-4">All Tags</span>
+      </a>
+
+    </div>
+  </header>
+  <ul class="list-group list-group-flush">
+    {% for tag in all_tags %}
+    <li class="list-group-item"><a href="{{url_for('street.view_tag', tag=tag)}}">
+        {{tag}}</a>
+
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endblock %}

@@ -28,6 +28,7 @@ from .forms import StreetEditForm, StreetSearchForm
 from .tasks import (
     calc_successor_info,
     inherit_grid,
+    redraw_affected_tags,
     redraw_map_for_street,
     redraw_map_for_streetlist,
     refresh_community_area_tags,
@@ -138,33 +139,6 @@ def street_listing():
         # withdrawn_streets=Street.query.filter_by(current=False).all(),
         search_form=form,
         year_str=year_str,
-        total_count=total_count,
-    )
-
-
-@blueprint.route(
-    "/street/by_tag/<string:tag>",
-    methods=[
-        "GET",
-    ],
-)
-def streets_by_tag(tag: str):
-    """Show all the known streets."""
-    form = StreetSearchForm(request.args)
-    current_streets = streets_sorted(
-        db.session.query(Street).filter(Street.tags.contains([tag]))
-    )
-    total_count = len(current_streets)
-
-    street_groups = []
-    for i in range(0, len(current_streets), 100):
-        street_groups.append(current_streets[i : i + 100])
-    # street_groups = itertools.zip_longest(current_streets * 100)
-    return render_template(
-        "streets/street_listing.html",
-        current_streets=street_groups,
-        search_form=form,
-        year_str="tagged '{}'".format(tag),
         total_count=total_count,
     )
 
@@ -322,6 +296,7 @@ def edit_street(tag: str):
             q.enqueue(redraw_map_for_street, d.street_id)
             q.enqueue(calc_successor_info, d.street_id)
             q.enqueue(inherit_grid, d.street_id)
+            q.enqueue(redraw_affected_tags, d.street_id)
 
         return redirect(url_for("street.view_street", tag=tag))
     elif form.is_submitted():
@@ -443,4 +418,50 @@ def list_streetlists():
     return render_template(
         "streets/streetlist_list.html",
         streetlists=streetlists,
+    )
+
+
+@blueprint.route("/streets/tags/", methods=["GET"])
+def list_tags():
+    """Show all the known tags."""
+    streets_with_tags = (
+        db.session.query(Street).filter(Street.tags != None).all()  # noqa
+    )
+
+    all_tags = set()
+    for street in streets_with_tags:
+        all_tags.update(set(street.tags))
+
+    all_tags = sorted(list((all_tags)))
+    return render_template(
+        "streets/tags_list.html",
+        all_tags=all_tags,
+    )
+
+
+@blueprint.route("/streets/tags/<string:tag>/", methods=["GET", "POST"])
+def view_tag(tag: str):
+    """Viewing a tag."""
+    streets = db.session.query(Street).filter(Street.tags.contains([tag])).all()
+    if not streets:
+        abort(404)
+
+    return render_template(
+        "streets/tag_view.html",
+        tag=tag,
+        streetlist=streets_sorted(streets),
+    )
+
+
+@blueprint.route("/streets/tags/<string:tag>/edit", methods=["GET", "POST"])
+def edit_tag(tag: str):
+    """Editing a tag."""
+    streets = db.session.query(Street).filter(Street.tags.contains([tag])).all()
+    if not streets:
+        abort(404)
+
+    return render_template(
+        "streets/tag_view.html",
+        tag=tag,
+        streetlist=streets_sorted(streets),
     )

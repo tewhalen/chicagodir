@@ -7,6 +7,7 @@ import boto3
 import matplotlib.pyplot as plt
 from environs import Env
 
+from chicagodir.database import db
 from chicagodir.streets.geodata import (
     ALL_CA_TAGS,
     active_community_areas,
@@ -137,38 +138,42 @@ def redraw_map_for_street(street_id: str):
     with NamedTemporaryFile(suffix=".png") as tempfile:
         plt.savefig(tempfile, format="png", dpi=200)
         plt.close()
-        subprocess.run(["mogrify", "-trim", "+repage", tempfile.name])
-        subprocess.run(["optipng", "-quiet", tempfile.name])
-
-        linode_obj_config = {
-            "aws_access_key_id": env.str("AWS_ACCESS_KEY"),
-            "aws_secret_access_key": env.str("AWS_SECRET_KEY"),
-            "endpoint_url": "https://us-east-1.linodeobjects.com",
-        }
-
-        client = boto3.client("s3", **linode_obj_config)
-        client.upload_file(
-            tempfile.name,
-            "chicitydir",
-            "streets/maps/{}.png".format(street.street_id),
-            ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
-        )
-        # for some reason this fails...
-        # os.unlink(tempfile.name)
+        process_and_upload_png(tempfile, "streets/maps/{}.png".format(street.street_id))
 
 
 def redraw_map_for_streetlist(streetlist_id: int):
     """Regenerate the map for a streetlist."""
     streetlist = StreetList.query.filter_by(id=streetlist_id).one()
+    streets = streetlist.sorted_streets()
+    url = "streets/lists/maps/{}.png".format(streetlist.id)
+    redraw_map_for_list_of_streets(streets, url)
 
+
+def redraw_affected_tags(street_id: str):
+    """Redraw maps for all tags of this street."""
+    street = Street.query.filter_by(street_id=street_id).one()
+    for tag in street.tags:
+        redraw_map_for_tag(tag)
+
+
+def redraw_map_for_tag(tag: str):
+    """Regenerate the map for streets with this tag."""
+    streets = db.session.query(Street).filter(Street.tags.contains([tag])).all()
+    url = "streets/lists/maps/tag/{}.png".format(tag)
+    redraw_map_for_list_of_streets(streets, url, street_color="red", street_width=0.75)
+
+
+def redraw_map_for_list_of_streets(
+    streets, url, street_color="black", street_width=0.5
+):
+    """Given list of streets, regenerate the map."""
     areas = load_areas()
     my_map = areas.boundary.plot(color="grey", linewidth=0.25)
     my_map.set_axis_off()
 
     street_data = None
-    street_color = "black"
 
-    for street in streetlist.sorted_streets():
+    for street in streets:
 
         if street.current:
             street_data = find_road_geom([street])
@@ -191,28 +196,33 @@ def redraw_map_for_streetlist(streetlist_id: int):
                         )
                         street_data = street_data.clip(clipping_area)
         if street_data is not None:
-            street_data.plot(ax=my_map, color=street_color, linewidth=0.5)
+            street_data.plot(ax=my_map, color=street_color, linewidth=street_width)
 
     plt.tight_layout()
 
     with NamedTemporaryFile(suffix=".png") as tempfile:
         plt.savefig(tempfile, format="png", dpi=200)
         plt.close()
-        subprocess.run(["mogrify", "-trim", "+repage", tempfile.name])
-        subprocess.run(["optipng", "-quiet", tempfile.name])
+        process_and_upload_png(tempfile, url)
 
-        linode_obj_config = {
-            "aws_access_key_id": env.str("AWS_ACCESS_KEY"),
-            "aws_secret_access_key": env.str("AWS_SECRET_KEY"),
-            "endpoint_url": "https://us-east-1.linodeobjects.com",
-        }
 
-        client = boto3.client("s3", **linode_obj_config)
-        client.upload_file(
-            tempfile.name,
-            "chicitydir",
-            "streets/lists/maps/{}.png".format(streetlist.id),
-            ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
-        )
-        # for some reason this fails...
-        # os.unlink(tempfile.name)
+def process_and_upload_png(tempfile, url):
+    """Get that png ready and upload it."""
+    subprocess.run(["mogrify", "-trim", "+repage", tempfile.name])
+    subprocess.run(["optipng", "-quiet", tempfile.name])
+
+    linode_obj_config = {
+        "aws_access_key_id": env.str("AWS_ACCESS_KEY"),
+        "aws_secret_access_key": env.str("AWS_SECRET_KEY"),
+        "endpoint_url": "https://us-east-1.linodeobjects.com",
+    }
+
+    client = boto3.client("s3", **linode_obj_config)
+    client.upload_file(
+        tempfile.name,
+        "chicitydir",
+        url,
+        ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
+    )
+    # for some reason this fails...
+    # os.unlink(tempfile.name)
