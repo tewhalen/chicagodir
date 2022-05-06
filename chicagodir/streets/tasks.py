@@ -160,17 +160,18 @@ def redraw_map_for_tag(tag: str):
     """Regenerate the map for streets with this tag."""
     streets = db.session.query(Street).filter(Street.tags.contains([tag])).all()
     url = "streets/lists/maps/tag/{}.png".format(tag)
-    redraw_map_for_list_of_streets(streets, url)
+    redraw_map_for_list_of_streets(streets, url, street_color="red", street_width=0.75)
 
 
-def redraw_map_for_list_of_streets(streets, url):
+def redraw_map_for_list_of_streets(
+    streets, url, street_color="black", street_width=0.5
+):
     """Given list of streets, regenerate the map."""
     areas = load_areas()
     my_map = areas.boundary.plot(color="grey", linewidth=0.25)
     my_map.set_axis_off()
 
     street_data = None
-    street_color = "black"
 
     for street in streets:
 
@@ -195,7 +196,7 @@ def redraw_map_for_list_of_streets(streets, url):
                         )
                         street_data = street_data.clip(clipping_area)
         if street_data is not None:
-            street_data.plot(ax=my_map, color=street_color, linewidth=0.5)
+            street_data.plot(ax=my_map, color=street_color, linewidth=street_width)
 
     plt.tight_layout()
 
