@@ -102,6 +102,7 @@ def redraw_map_for_street(street_id: str):
             print("Warning: no street data for {}".format(street_id))
         active_cas = active_community_areas(street_data)
         active_cas.plot(ax=my_map, color="pink")
+        plt.title(street.full_name, y=-0.01)
     else:
         current_streets = street.find_current_successors()
         street_color = "grey"
@@ -126,6 +127,8 @@ def redraw_map_for_street(street_id: str):
                     # highlight where these portions are
                     active_cas = active_community_areas(highlight_data)
                     active_cas.plot(ax=my_map, color="pink")
+                plt.title(street.context_info, y=-0.01)
+
     if street_data is not None:
         street_data.plot(ax=my_map, color=street_color)
     else:
@@ -160,11 +163,17 @@ def redraw_map_for_tag(tag: str):
     """Regenerate the map for streets with this tag."""
     streets = db.session.query(Street).filter(Street.tags.contains([tag])).all()
     url = "streets/lists/maps/tag/{}.png".format(tag)
-    redraw_map_for_list_of_streets(streets, url, street_color="red", street_width=0.75)
+    redraw_map_for_list_of_streets(
+        streets,
+        url,
+        street_color="red",
+        street_width=0.75,
+        title=f"streets tagged '{tag}'",
+    )
 
 
 def redraw_map_for_list_of_streets(
-    streets, url, street_color="black", street_width=0.5
+    streets, url, street_color="black", street_width=0.5, title=""
 ):
     """Given list of streets, regenerate the map."""
     areas = load_areas()
@@ -197,6 +206,8 @@ def redraw_map_for_list_of_streets(
                         street_data = street_data.clip(clipping_area)
         if street_data is not None:
             street_data.plot(ax=my_map, color=street_color, linewidth=street_width)
+    if title:
+        plt.title(title, y=-0.01)
 
     plt.tight_layout()
 

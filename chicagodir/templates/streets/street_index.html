@@ -2,8 +2,10 @@
 
 {% block css %}
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="{{street.full_name}} on chicagocity.directory">
+<meta name="twitter:title" content="{{street.full_name}} – {{street.retirement_info()}}">
 <meta name="twitter:description" content="{{street.historical_note}}">
+<meta name="twitter:image"
+    content="https://chicitydir.us-east-1.linodeobjects.com/streets/maps/{{street.street_id}}.png">
 {% endblock %}
 
 {% block page_title %}
