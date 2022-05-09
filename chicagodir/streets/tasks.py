@@ -12,6 +12,7 @@ from chicagodir.streets.geodata import (
     ALL_CA_TAGS,
     active_community_areas,
     clip_by_address,
+    find_city_limits_for_year,
     find_community_areas,
     find_road_geom,
     load_areas,
@@ -93,48 +94,20 @@ def redraw_map_for_street(street_id: str):
     my_map = areas.boundary.plot(color="grey", linewidth=0.25)
     my_map.set_axis_off()
 
-    street_data, highlight_data = None, None
     street_color = "black"
-    if street.current:
-        street_data = find_road_geom([street])
-        # highlight where this street runs
-        if street_data is None:
-            print("Warning: no street data for {}".format(street_id))
-        active_cas = active_community_areas(street_data)
+    full_extent, clipped_extent = get_full_and_clipped_geometry(street)
+
+    if clipped_extent is not None:
+        active_cas = active_community_areas(clipped_extent)
         active_cas.plot(ax=my_map, color="pink")
+
+    if street.current:
         plt.title(street.full_name, y=-0.01)
+        full_extent.plot(ax=my_map, color=street_color)
     else:
-        current_streets = street.find_current_successors()
-        street_color = "grey"
-
-        if current_streets:
-
-            street_data = find_road_geom(current_streets)
-            if street_data is None:
-                print("Warning: no street data for {}".format(street_id))
-            # if there's just one final street:
-            if len(current_streets) == 1:
-                final = current_streets.pop()
-                if street.min_address and street.max_address:
-                    clipping_area = clip_by_address(
-                        street_data,
-                        final.direction,
-                        street.min_address,
-                        street.max_address,
-                    )
-                    highlight_data = street_data.clip(clipping_area)
-
-                    # highlight where these portions are
-                    active_cas = active_community_areas(highlight_data)
-                    active_cas.plot(ax=my_map, color="pink")
-                plt.title(street.context_info, y=-0.01)
-
-    if street_data is not None:
-        street_data.plot(ax=my_map, color=street_color)
-    else:
-        print("Warning: no street data!")
-    if highlight_data is not None:
-        highlight_data.plot(ax=my_map, color="red")
+        plt.title(street.context_info, y=-0.01)
+        full_extent.plot(ax=my_map, color=street_color)
+        clipped_extent.plot(ax=my_map, color="red")
 
     plt.tight_layout()
 
@@ -149,7 +122,12 @@ def redraw_map_for_streetlist(streetlist_id: int):
     streetlist = StreetList.query.filter_by(id=streetlist_id).one()
     streets = streetlist.sorted_streets()
     url = "streets/lists/maps/{}.png".format(streetlist.id)
-    redraw_map_for_list_of_streets(streets, url)
+    redraw_map_for_list_of_streets(
+        streets,
+        url,
+        year=streetlist.date.year,
+        title=f"{streetlist.name} ({streetlist.date.year})",
+    )
 
 
 def redraw_affected_tags(street_id: str):
@@ -172,40 +150,65 @@ def redraw_map_for_tag(tag: str):
     )
 
 
+def get_full_and_clipped_geometry(street: Street):
+    """Given a street, find its current sucessors and then attempt to clip them to the origial extent.
+
+    Returns (full_geometry, clipped_geometry)
+    """
+    current_streets = street.find_current_successors()
+    if not current_streets:
+        return None, None
+    street_data = find_road_geom(current_streets)
+    if (len(current_streets) == 1) and street.min_address and street.max_address:
+        final = current_streets.pop()
+        if final.direction:
+            clipping_area = clip_by_address(
+                street_data,
+                final.direction,
+                street.min_address,
+                street.max_address,
+            )
+            return street_data, street_data.clip(clipping_area)
+
+    return street_data, street_data
+
+
 def redraw_map_for_list_of_streets(
-    streets, url, street_color="black", street_width=0.5, title=""
+    streets: list[Street],
+    url: str,
+    street_color: str = "black",
+    street_width: float = 0.5,
+    title: str = "",
+    year: int = None,
 ):
     """Given list of streets, regenerate the map."""
+
     areas = load_areas()
-    my_map = areas.boundary.plot(color="grey", linewidth=0.25)
+
+    if year:
+        # everything outside of the contemporary city limits will be faded out
+        city_limits = find_city_limits_for_year(year)
+        my_map = city_limits.plot(facecolor="wheat", edgecolor="none")
+        areas.boundary.plot(ax=my_map, color="lightgrey", linewidth=0.25)
+        # areas.clip(city_limits).boundary.plot(ax=my_map, color="grey", linewidth=0.25)
+    else:
+        my_map = areas.boundary.plot(color="lightgrey", linewidth=0.25)
+
     my_map.set_axis_off()
 
-    street_data = None
-
     for street in streets:
+        _, street_data = get_full_and_clipped_geometry(street)
 
-        if street.current:
-            street_data = find_road_geom([street])
-            # highlight where this street runs
-        else:
-            current_streets = street.find_current_successors()
-
-            if current_streets:
-
-                street_data = find_road_geom(current_streets)
-                # if there's just one final street:
-                if len(current_streets) == 1:
-                    final = current_streets.pop()
-                    if street.min_address and street.max_address:
-                        clipping_area = clip_by_address(
-                            street_data,
-                            final.direction,
-                            street.min_address,
-                            street.max_address,
-                        )
-                        street_data = street_data.clip(clipping_area)
         if street_data is not None:
-            street_data.plot(ax=my_map, color=street_color, linewidth=street_width)
+            if year:
+
+                street_data.plot(ax=my_map, color="darkgrey", linewidth=street_width)
+                street_data.clip(city_limits).plot(
+                    ax=my_map, color=street_color, linewidth=street_width
+                )
+            else:
+                street_data.plot(ax=my_map, color=street_color, linewidth=street_width)
+
     if title:
         plt.title(title, y=-0.01)
 
@@ -217,7 +220,7 @@ def redraw_map_for_list_of_streets(
         process_and_upload_png(tempfile, url)
 
 
-def process_and_upload_png(tempfile, url):
+def process_and_upload_png(tempfile, url: str):
     """Get that png ready and upload it."""
     subprocess.run(["mogrify", "-trim", "+repage", tempfile.name])
     subprocess.run(["optipng", "-quiet", tempfile.name])
