@@ -1,7 +1,5 @@
 """Handle functions that have to do with GIS."""
 
-import os
-
 import geopandas as gpd
 from shapely.geometry import Polygon
 
@@ -9,12 +7,7 @@ from chicagodir.database import db
 
 from .grid_interpolate import Grid
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-
 gridmaker = Grid()
-
-# Filepaths
-# areas_fp = HERE + "/data/CommAreas.shp"
 
 
 def clip_by_address(data, direction, min_address, max_address):
@@ -49,44 +42,22 @@ def clip_by_address(data, direction, min_address, max_address):
         )
 
 
-class GPDCache:
-    """Cache for GIS data in a geopandas DF."""
-
-    def __init__(self, fp):
-        """Initialize."""
-        self._cache = None
-        self.fp = fp
-
-    def __call__(self):
-        """Load if not cached."""
-        if self._cache is None:
-            self._cache = gpd.read_file(self.fp)
-        return self._cache
-
-
-class RoadCache(GPDCache):
-    """Cache for road data that does a little processing on load."""
-
-    def __call__(self):
-        """Load if not cached."""
-        if self._cache is None:
-            roads = gpd.read_file(self.fp)
-            roads.loc[roads["STREET_TYP"].isnull(), "STREET_TYP"] = ""
-            roads.loc[roads["PRE_DIR"].isnull(), "PRE_DIR"] = ""
-            self._cache = roads
-        return self._cache
-
-
-# load_areas = GPDCache(areas_fp)
-# load_roads = RoadCache(roads_fp)
-
-
 def load_areas():
     """Load the community areas from the database."""
     sql = "SELECT id, name, geom from comm_areas"
 
     with db.get_engine().connect() as connection:
         return gpd.read_postgis(sql, connection)
+
+
+def find_city_limits_for_year(year: int):
+    """Load the city limits for this year from the database."""
+    if year < 1830:
+        year = 1830
+    sql = "SELECT year, geom FROM city_limits WHERE year <= %(year)s ORDER BY year DESC limit 1"
+
+    with db.get_engine().connect() as connection:
+        return gpd.read_postgis(sql, connection, params={"year": year})
 
 
 def find_road_geom(streets):
