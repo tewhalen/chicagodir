@@ -1,53 +1,65 @@
 """Handle functions that have to do with GIS."""
 
+# controllers.py
+from typing import TYPE_CHECKING
+import logging
+
 import geopandas as gpd
+from geoalchemy2 import WKBElement
+from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import Polygon
+from shapely.ops import clip_by_rect
 
 from chicagodir.database import db
 
 from .grid_interpolate import Grid
 
+if TYPE_CHECKING:
+    from chicagodir.streets.models import Street
+
+
 gridmaker = Grid()
 
 
 def clip_by_address(data, direction, min_address, max_address):
-    """Return a bounding box that clips the given geodata based on grid locations."""
-    min_address_v = gridmaker.predict(direction, int(min_address))
+    """Return the given geodata clipped by a bounding box based on grid locations."""
+    predicted = (
+        gridmaker.predict(direction, int(min_address)),
+        gridmaker.predict(direction, int(max_address)),
+    )
+    min_address_v = min(predicted)
 
-    max_address_v = gridmaker.predict(direction, int(max_address))
+    max_address_v = max(predicted)
+    geom = to_shape(data)
+    x_min, y_min, x_max, y_max = geom.bounds  # (minx, miny, maxx, maxy)
+
+    logging.debug("clipping from: %s %s %s %s", x_min, y_min, x_max, y_max)
 
     if direction in ("N", "S"):
-        s_min = data["geom"].bounds["minx"].min()
-        s_max = data["geom"].bounds["maxx"].max()
-
-        return Polygon(
-            [
-                (s_min, min_address_v),
-                (s_max, min_address_v),
-                (s_max, max_address_v),
-                (s_min, max_address_v),
-            ]
-        )
+        y_min = max(y_min, min_address_v)
+        y_max = min(y_max, max_address_v)
     else:
-        s_min = data["geom"].bounds["miny"].min()
-        s_max = data["geom"].bounds["maxy"].max()
-
-        return Polygon(
-            [
-                (min_address_v, s_min),
-                (min_address_v, s_max),
-                (max_address_v, s_max),
-                (max_address_v, s_min),
-            ]
-        )
+        x_min = max(x_min, min_address_v)
+        x_max = min(x_max, max_address_v)
+    logging.debug("clipping to: %s %s %s %s", x_min, y_min, x_max, y_max)
+    clipped = clip_by_rect(geom, x_min, y_min, x_max, y_max)
+    return from_shape(clipped, srid=data.srid)
 
 
-def load_areas():
+def load_areas(geom=None):
     """Load the community areas from the database."""
-    sql = "SELECT id, name, geom from comm_areas"
+    if geom:
+        sql = "SELECT id, name, geom from comm_areas where ST_Intersects(geom, ST_SetSRID(%(street_geom)s::geometry,3435))"
+        assert geom.srid == 3435
 
-    with db.get_engine().connect() as connection:
-        return gpd.read_postgis(sql, connection)
+        with db.get_engine().connect() as connection:
+            return gpd.read_postgis(sql, connection, params={"street_geom": geom.data})
+
+    else:
+        sql = "SELECT id, name, geom from comm_areas"
+
+        with db.get_engine().connect() as connection:
+            return gpd.read_postgis(sql, connection)
 
 
 def find_city_limits_for_year(year: int):
@@ -71,8 +83,7 @@ def find_road_geom(streets):
 
 def active_community_areas(geom):
     """Given street geometry, find overlapping community areas."""
-    areas = load_areas()
-    return areas.sjoin(geom, how="inner")
+    return load_areas(geom)
 
 
 def find_community_areas(geom):

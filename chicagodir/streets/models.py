@@ -3,90 +3,24 @@
 
 import base64
 import datetime
+import logging
 import re
 import uuid
 
-from sqlalchemy import inspect
+from geoalchemy2 import Geometry
+from geoalchemy2.shape import to_shape
+from sqlalchemy import ForeignKey, func, inspect
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
 
 from chicagodir.database import Column, PkModel, db, reference_col, relationship
+from chicagodir.streets.geodata import clip_by_address
+from chicagodir.streets.sorting import (
+    fix_street_name,
+    fix_street_type,
+    street_title_case,
+)
 from chicagodir.streets.streetlist import StreetListEntry
-
-post_type_map = {
-    "AY": "AVE",
-    "AV": "AVE",
-    "AVENUE": "AVE",
-    "DRIVE": "DR",
-    "PLACE": "PL",
-    "COURT": "CT",
-    "TERRACE": "TER",
-    "TERR": "TER",
-    "ROAD": "RD",
-    "PARKWAY": "PKWY",
-    "SQUARE": "SQ",
-    "STREET": "ST",
-    "EXPRESSWAY": "EXPY",
-    "BOULEVARD": "BLVD",
-    "CRESCENT": "CRES",
-    "LANE": "LN",
-    "PLAZA": "PLZ",
-    "HIGHWAY": "HWY",
-}
-
-
-def atoi(text):
-    """Convert text to an integer if possible."""
-    return int(text) if text.isdigit() else text
-
-
-def numeric_split(text):
-    """Use regex to split text into (numeric)(alpha)."""
-    return re.match(r"(\d+)([^\d\s]+)", text)
-
-
-def fix_street_type(raw_post_type: str) -> str:
-    """Standardize street type into uppercase abbreviation."""
-    converted = raw_post_type.strip(".,").upper().strip()
-    return post_type_map.get(converted, converted)
-
-
-def fix_ordinal(text: str) -> str:
-    """Some historical documents have non-standard ordinals and this fixes them.
-
-    23nd -> 23RD
-    17th -> 17TH
-    2RD -> 2ND
-    11nd -> 11TH
-    21nd -> 21ST
-    etc.
-    """
-    m = numeric_split(text)
-    if not m:
-        return text
-    number, suffix = m.groups()
-    if 3 < int(number) < 20:
-        return number + "TH"
-    elif number[-1] == "3":
-        return number + "RD"
-    elif number[-1] == "2":
-        return number + "ND"
-    elif number[-1] == "1":
-        return number + "ST"
-    return number + "TH"
-
-
-def fix_street_name(raw_street_name: str) -> str:
-    """Repair potentially weird street names by uppercasing and fixing weird ordinals."""
-    street_name = raw_street_name.upper()
-    street_name = fix_ordinal(street_name)
-
-    return street_name
-
-
-def street_title_case(raw_street_name: str) -> str:
-    """Put a street name back into title case."""
-    return " ".join(x.capitalize() for x in re.split(r"(\s+)", raw_street_name))
 
 
 class Street(PkModel):
@@ -155,6 +89,9 @@ class Street(PkModel):
 
     successor_name = Column(db.String(80), nullable=True)
 
+    # add geometry
+    geom = Column(Geometry("GEOMETRY", srid=3435))
+
     __table_args__ = (db.Index("idx_streets_name_suff", "name", "suffix"),)
 
     @classmethod
@@ -213,6 +150,48 @@ class Street(PkModel):
     def successor_streets(self) -> "list[Street]":
         """A list of successor streets."""
         return [change.to_street for change in self.successor_changes()]
+
+    def full_geometry(self):
+        """Return the geometry of this street if known, or of all successor streets, or none."""
+        if self.geom:
+            return self.geom
+        else:
+            return (
+                db.session.query(func.ST_SetSRID(func.ST_Union(Street.geom), 3435))
+                .filter(Street.id.in_([street.id for street in self.successor_streets]))
+                .scalar()
+            )
+
+    def specific_geometry(self):
+        """Return the geometry of this street.
+        Either known (and stored) or calculated, based on using successor streets and known grid locations."""
+        if self.geom:
+            return self.geom
+        else:
+            current_streets = self.find_current_successors()
+            if not current_streets:
+                return None
+
+            elif (
+                (len(current_streets) == 1)
+                and self.min_address
+                and self.max_address
+                and next(iter(current_streets)).direction
+            ):
+                fg = self.full_geometry()
+                if fg is None:
+                    return None
+                else:
+                    return clip_by_address(
+                        fg,
+                        next(iter(current_streets)).direction,
+                        self.min_address,
+                        self.max_address,
+                    )
+
+    def best_geometry(self):
+        """Return either the specific geometry or the full geometry."""
+        return self.specific_geometry() or self.full_geometry()
 
     def calculate_single_successor(self):
         """If this is succeeded by a single street, store its name and suffix."""
@@ -301,6 +280,16 @@ class Street(PkModel):
             return "{}{}".format(c, year)
         else:
             return ""
+
+    def year_range(self) -> tuple[int]:
+        """Return a range of years that this street was valid between."""
+        early, late = 1830, datetime.date.today().year
+        if self.start_date:
+            early = self.start_date.year
+
+        if self.end_date:
+            late = self.end_date.year
+        return (early, late)
 
     @property
     def context_info(self) -> str:
@@ -506,6 +495,17 @@ class Street(PkModel):
             i += 1
         self.street_id = "{:.8}_{:02}".format(self.name, i)
 
+    def stored_maps(self):
+        """Return the list of stored maps that this street might appear on."""
+        early, late = self.year_range()
+        q = (
+            db.session.query(StoredMap)
+            .filter(StoredMap.year >= early)
+            .filter(StoredMap.year <= late)
+            .filter(func.ST_Intersects(StoredMap.geom, self.best_geometry()))
+        )
+        return q.all()
+
 
 class StreetChange(PkModel):
     """An association between two streets indicating a renaming or other change."""
@@ -543,3 +543,17 @@ class StreetEdit(PkModel):
 
     # note of edit
     note = Column(db.Text())
+
+
+class StoredMap(PkModel):
+    """A map with geometry."""
+
+    __tablename__ = "stored_map"
+    name = Column(db.String(80), nullable=False)
+    year = Column(db.Integer(), nullable=False, index=True)
+
+    url = Column(db.Text())
+
+    # other notes
+    text = Column(db.Text())
+    geom = Column(Geometry("GEOMETRY", srid=3435))
