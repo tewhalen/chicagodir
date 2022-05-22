@@ -35,7 +35,11 @@ def clip_by_address(data, direction, min_address, max_address):
         x_min = max(x_min, min_address_v)
         x_max = min(x_max, max_address_v)
     logging.debug("clipping to: %s %s %s %s", x_min, y_min, x_max, y_max)
-    clipped = clip_by_rect(geom, x_min, y_min, x_max, y_max)
+    try:
+        clipped = clip_by_rect(geom, x_min, y_min, x_max, y_max)
+    except ValueError:
+        # clip_by_rect throws an error when there's nothing left
+        return None
     return from_shape(clipped, srid=data.srid)
 
 
