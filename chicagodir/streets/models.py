@@ -3,13 +3,10 @@
 
 import base64
 import datetime
-import logging
-import re
 import uuid
 
 from geoalchemy2 import Geometry
-from geoalchemy2.shape import to_shape
-from sqlalchemy import ForeignKey, func, inspect
+from sqlalchemy import func, inspect
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import expression
 
@@ -164,7 +161,9 @@ class Street(PkModel):
 
     def specific_geometry(self):
         """Return the geometry of this street.
-        Either known (and stored) or calculated, based on using successor streets and known grid locations."""
+
+        Either known (and stored) or calculated, based on using successor streets and known grid locations.
+        """
         if self.geom:
             return self.geom
         else:

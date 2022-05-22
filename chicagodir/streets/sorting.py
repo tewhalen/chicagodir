@@ -2,7 +2,6 @@
 
 import re
 
-
 post_type_map = {
     "AY": "AVE",
     "AV": "AVE",

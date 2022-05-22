@@ -9,12 +9,10 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from environs import Env
 from geoalchemy2.shape import to_shape
-from numpy import full
 
 from chicagodir.database import db
 from chicagodir.streets.geodata import (
     ALL_CA_TAGS,
-    active_community_areas,
     find_city_limits_for_year,
     find_community_areas,
     load_areas,
@@ -78,7 +76,7 @@ def redraw_map_for_street(street_id: str):
     street_color = "black"
     full_extent, clipped_extent = street.full_geometry(), street.specific_geometry()
     if clipped_extent is not None:
-        active_cas = active_community_areas(clipped_extent)
+        active_cas = load_areas(clipped_extent)
         active_cas.plot(ax=my_map, color="pink")
 
     if street.current:

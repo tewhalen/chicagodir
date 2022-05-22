@@ -1,22 +1,15 @@
 """Handle functions that have to do with GIS."""
 
 # controllers.py
-from typing import TYPE_CHECKING
 import logging
 
 import geopandas as gpd
-from geoalchemy2 import WKBElement
-from geoalchemy2.shape import to_shape, from_shape
-from shapely.geometry import Polygon
+from geoalchemy2.shape import from_shape, to_shape
 from shapely.ops import clip_by_rect
 
 from chicagodir.database import db
 
 from .grid_interpolate import Grid
-
-if TYPE_CHECKING:
-    from chicagodir.streets.models import Street
-
 
 gridmaker = Grid()
 
@@ -49,7 +42,8 @@ def clip_by_address(data, direction, min_address, max_address):
 def load_areas(geom=None):
     """Load the community areas from the database."""
     if geom:
-        sql = "SELECT id, name, geom from comm_areas where ST_Intersects(geom, ST_SetSRID(%(street_geom)s::geometry,3435))"
+        sql = """SELECT id, name, geom from comm_areas
+                WHERE ST_Intersects(geom, ST_SetSRID(%(street_geom)s::geometry,3435))"""
         assert geom.srid == 3435
 
         with db.get_engine().connect() as connection:
@@ -72,23 +66,9 @@ def find_city_limits_for_year(year: int):
         return gpd.read_postgis(sql, connection, params={"year": year})
 
 
-def find_road_geom(streets):
-    """Given a list of streets, return a geopandas DF with relevant info."""
-    street_ids = tuple(x.street_id for x in streets)
-    sql = "SELECT street_id, geom from street_lines where street_id in %(streets)s"
-
-    with db.get_engine().connect() as connection:
-        return gpd.read_postgis(sql, connection, params={"streets": street_ids})
-
-
-def active_community_areas(geom):
-    """Given street geometry, find overlapping community areas."""
-    return load_areas(geom)
-
-
 def find_community_areas(geom):
     """Name the community areas intersected by given geometry."""
-    active_cas = active_community_areas(geom)
+    active_cas = load_areas(geom)
     return [(int(n), COMMUNITY_AREAS[int(n)]) for n in active_cas["id"].unique()]
 
 
