@@ -509,6 +509,8 @@ class Street(PkModel):
 
     def streets_with_same_grid(self):
         """Return the list of streets that are on the same line."""
+        if not (self.grid_direction and self.grid_location):
+            return []
         q = (
             db.session.query(Street)
             .filter(Street.grid_location == self.grid_location)

@@ -121,6 +121,8 @@ chicagocity.directory / {{street.full_name}}
                 </div>
             </div>
             {% endif %}
+            {% if street.stored_maps() %}
+
             <div class="card  d-flex align-items-start">
 
                 <div class="card-body">
@@ -135,7 +137,8 @@ chicagocity.directory / {{street.full_name}}
                     </ul>
                 </div>
             </div>
-
+            {% endif %}
+            {% if street.data_issues() %}
             <div class="card d-flex align-items-start">
 
                 <div class="card-body">
@@ -151,6 +154,7 @@ chicagocity.directory / {{street.full_name}}
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-5">
