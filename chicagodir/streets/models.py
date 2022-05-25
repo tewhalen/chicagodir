@@ -16,6 +16,7 @@ from chicagodir.streets.sorting import (
     fix_street_name,
     fix_street_type,
     street_title_case,
+    streets_sorted,
 )
 from chicagodir.streets.streetlist import StreetListEntry
 
@@ -502,8 +503,20 @@ class Street(PkModel):
             .filter(StoredMap.year >= early)
             .filter(StoredMap.year <= late)
             .filter(func.ST_Intersects(StoredMap.geom, self.best_geometry()))
+            .order_by(StoredMap.year)
         )
         return q.all()
+
+    def streets_with_same_grid(self):
+        """Return the list of streets that are on the same line."""
+        q = (
+            db.session.query(Street)
+            .filter(Street.grid_location == self.grid_location)
+            .filter(Street.grid_direction == self.grid_direction)
+            .filter(Street.diagonal == self.diagonal)
+            .filter(Street.id != self.id)
+        )
+        return streets_sorted(q.all())
 
 
 class StreetChange(PkModel):
