@@ -41,7 +41,11 @@ chicagocity.directory / {{street.full_name}}
     {% else %}
     <h4>{{street.start_date_info()|default("?", true)}} – {{street.end_date_info()}}</h4>
     {% endif %}
+
     {% endif %}
+    {% for annex in street.annexations() %}
+    <h5>Possibly part of the {{annex.name}} annexation in {{annex.year}}.</h5>
+    {% endfor %}
     <div>{{street.historical_note}}</div>
 
     <div class="container px-4 py-5" id="icon-grid">

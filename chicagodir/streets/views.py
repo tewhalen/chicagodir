@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
 import datetime
+import io
 
 import markdown
 import redis
@@ -9,6 +10,7 @@ from flask import (
     abort,
     current_app,
     jsonify,
+    make_response,
     redirect,
     render_template,
     request,
@@ -465,3 +467,17 @@ def edit_tag(tag: str):
         tag=tag,
         streetlist=streets_sorted(streets),
     )
+
+
+@blueprint.route("/streets/export", methods=["GET"])
+def export_streets_csv():
+    """Dump csv."""
+    sql = """COPY streets to STDIN WITH (FORMAT csv, DELIMITER ',', QUOTE '"', HEADER TRUE)"""
+    file = io.StringIO()
+    connection = db.get_engine().raw_connection()
+    cur = connection.cursor()
+    cur.copy_expert(sql, file)
+    output = make_response(file.getvalue())
+    output.headers["Content-type"] = "text/csv"
+    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    return output

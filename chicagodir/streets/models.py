@@ -507,6 +507,18 @@ class Street(PkModel):
         )
         return q.all()
 
+    def annexations(self):
+        """Return the annexation that this street might appear on."""
+        early, late = self.year_range()
+        q = (
+            db.session.query(Annexation)
+            .filter(Annexation.year >= early)
+            .filter(Annexation.year <= late)
+            .filter(func.ST_Covers(Annexation.geom, self.best_geometry()))
+            .order_by(Annexation.year)
+        )
+        return q.all()
+
     def streets_with_same_grid(self):
         """Return the list of streets that are on the same line."""
         if not (self.grid_direction and self.grid_location):
@@ -567,6 +579,18 @@ class StoredMap(PkModel):
     year = Column(db.Integer(), nullable=False, index=True)
 
     url = Column(db.Text())
+
+    # other notes
+    text = Column(db.Text())
+    geom = Column(Geometry("GEOMETRY", srid=3435))
+
+
+class Annexation(PkModel):
+    """An annexation map with geometry."""
+
+    __tablename__ = "annexations"
+    name = Column(db.String(80), nullable=False)
+    year = Column(db.Integer(), nullable=False, index=True)
 
     # other notes
     text = Column(db.Text())
