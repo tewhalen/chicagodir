@@ -33,7 +33,7 @@ ENV PATH="$POETRY_HOME/bin:/home/sid/.local/bin/:$PATH"
 RUN pip install poetry
 COPY ["poetry.lock", "pyproject.toml", "./"]
 
-RUN poetry install --only main
+RUN poetry install --no-dev
 
 
 # ================================== BUILDER ===================================
