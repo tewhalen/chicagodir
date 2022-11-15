@@ -29,7 +29,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry"
 
 ENV PATH="$POETRY_HOME/bin:/home/sid/.local/bin/:$PATH"
-
+RUN python3 -m pip install --upgrade pip
 RUN pip install poetry
 COPY ["poetry.lock", "pyproject.toml", "./"]
 
