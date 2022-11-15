@@ -34,7 +34,8 @@ module.exports = {
     chunkFilename: "[id].js",
     filename: "[name].bundle.js",
     path: path.join(__dirname, "chicagodir", "static", "build"),
-    publicPath: "/static/build/"
+    publicPath: "/static/build/",
+    assetModuleFilename: "[path][name][ext][query]",
   },
   resolve: {
     extensions: [".js", ".jsx", ".css"]
