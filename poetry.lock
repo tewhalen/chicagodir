@@ -412,17 +412,6 @@ testfixtures = ">=6.8.0,<7"
 test = ["pytest-cov"]
 
 [[package]]
-name = "flake8-polyfill"
-version = "1.0.2"
-description = "Polyfill package for Flake8 plugins"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-flake8 = "*"
-
-[[package]]
 name = "flask"
 version = "2.2.2"
 description = "A simple framework for building complex web applications."
@@ -898,15 +887,14 @@ testing = ["funcsigs", "pytest"]
 
 [[package]]
 name = "pep8-naming"
-version = "0.12.1"
+version = "0.13.2"
 description = "Check PEP-8 naming conventions, plugin for flake8"
 category = "dev"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 
 [package.dependencies]
 flake8 = ">=3.9.1"
-flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 name = "pillow"
@@ -1435,7 +1423,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "96f7979488349453e6034427daa14479b7b27e05b50b7fb2ed94970078154df2"
+content-hash = "6325fd4399dee6d581bd796cc11370646e8cdc1774968238e3eb37fc168f866b"
 
 [metadata.files]
 alembic = [
@@ -1746,10 +1734,6 @@ flake8-docstrings = [
 flake8-isort = [
     {file = "flake8-isort-4.1.1.tar.gz", hash = "sha256:d814304ab70e6e58859bc5c3e221e2e6e71c958e7005239202fee19c24f82717"},
     {file = "flake8_isort-4.1.1-py3-none-any.whl", hash = "sha256:c4e8b6dcb7be9b71a02e6e5d4196cefcef0f3447be51e82730fb336fff164949"},
-]
-flake8-polyfill = [
-    {file = "flake8-polyfill-1.0.2.tar.gz", hash = "sha256:e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda"},
-    {file = "flake8_polyfill-1.0.2-py2.py3-none-any.whl", hash = "sha256:12be6a34ee3ab795b19ca73505e7b55826d5f6ad7230d31b18e106400169b9e9"},
 ]
 flask = [
     {file = "Flask-2.2.2-py3-none-any.whl", hash = "sha256:b9c46cc36662a7949f34b52d8ec7bb59c0d74ba08ba6cb9ce9adc1d8676d9526"},
@@ -2197,8 +2181,8 @@ pdbpp = [
     {file = "pdbpp-0.10.3.tar.gz", hash = "sha256:d9e43f4fda388eeb365f2887f4e7b66ac09dce9b6236b76f63616530e2f669f5"},
 ]
 pep8-naming = [
-    {file = "pep8-naming-0.12.1.tar.gz", hash = "sha256:bb2455947757d162aa4cad55dba4ce029005cd1692f2899a21d51d8630ca7841"},
-    {file = "pep8_naming-0.12.1-py2.py3-none-any.whl", hash = "sha256:4a8daeaeb33cfcde779309fc0c9c0a68a3bbe2ad8a8308b763c5068f86eb9f37"},
+    {file = "pep8-naming-0.13.2.tar.gz", hash = "sha256:93eef62f525fd12a6f8c98f4dcc17fa70baae2f37fa1f73bec00e3e44392fa48"},
+    {file = "pep8_naming-0.13.2-py3-none-any.whl", hash = "sha256:59e29e55c478db69cffbe14ab24b5bd2cd615c0413edf790d47d3fb7ba9a4e23"},
 ]
 pillow = [
     {file = "Pillow-9.3.0-1-cp37-cp37m-win32.whl", hash = "sha256:e6ea6b856a74d560d9326c0f5895ef8050126acfdc7ca08ad703eb0081e82b74"},
